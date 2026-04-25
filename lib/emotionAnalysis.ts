@@ -1,16 +1,22 @@
 import * as faceapi from 'face-api.js'
 
+export type Emotion = 'happy' | 'calm' | 'sad' | 'angry'
+
 export interface EmotionResult {
-  neutral: number
   happy: number
+  calm: number
   sad: number
   angry: number
-  fearful: number
-  disgusted: number
-  surprised: number
 }
 
-export type EmotionKey = keyof EmotionResult
+export const EMOTION_LABELS: Record<Emotion, string> = {
+  happy: '기쁨',
+  calm: '평온',
+  sad: '슬픔',
+  angry: '화남',
+}
+
+export const EMOTION_ORDER: Emotion[] = ['happy', 'calm', 'sad', 'angry']
 
 const MODELS_URL = '/models'
 
@@ -33,20 +39,24 @@ export async function analyzeEmotion(
   if (!detection) return null
 
   const e = detection.expressions
+  const happy = e.happy
+  const calm = e.neutral
+  const sad = e.sad
+  const angry = e.angry
+
+  const sum = happy + calm + sad + angry
+  if (sum <= 0) return { happy: 0, calm: 1, sad: 0, angry: 0 }
+
   return {
-    neutral: e.neutral,
-    happy: e.happy,
-    sad: e.sad,
-    angry: e.angry,
-    fearful: e.fearful,
-    disgusted: e.disgusted,
-    surprised: e.surprised,
+    happy: happy / sum,
+    calm: calm / sum,
+    sad: sad / sum,
+    angry: angry / sum,
   }
 }
 
-export function getDominantEmotion(emotions: EmotionResult): EmotionKey {
-  const entries = Object.entries(emotions) as [EmotionKey, number][]
-  return entries.reduce((best, current) =>
-    current[1] > best[1] ? current : best,
-  )[0]
+export function getDominantEmotion(emotions: EmotionResult): Emotion {
+  return EMOTION_ORDER.reduce((best, current) =>
+    emotions[current] > emotions[best] ? current : best,
+  )
 }
