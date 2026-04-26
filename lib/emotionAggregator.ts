@@ -1,17 +1,6 @@
-import type { EmotionResult, Emotion } from './emotionAnalysis'
+import type { EmotionResult } from './emotionAnalysis'
 import { getDominantEmotion } from './emotionAnalysis'
-
-type EmotionRecordInput = {
-  timestamp: Date
-  duration: number
-  detectionRate: number
-  happy: number
-  calm: number
-  sad: number
-  angry: number
-  dominantEmotion: Emotion
-  flatAffectScore: number
-}
+import type { EmotionRecordInput } from './emotionRepository'
 
 export interface EmotionSample {
   emotion: EmotionResult | null
