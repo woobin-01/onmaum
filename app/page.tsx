@@ -1,30 +1,27 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import CameraView from '@/components/CameraView'
 import EmotionDisplay from '@/components/EmotionDisplay'
-import {
-  analyzeEmotion,
-  loadFaceApiModels,
-  type EmotionResult,
-} from '@/lib/emotionAnalysis'
+import RecentRecords from '@/components/RecentRecords'
+import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
+import { loadFaceApiModels } from '@/lib/emotionAnalysis'
+import { db } from '@/lib/db'
 
 type ModelStatus = 'loading' | 'ready' | 'error'
-
-const ANALYSIS_INTERVAL_MS = 500
 
 export default function Home() {
   const [modelStatus, setModelStatus] = useState<ModelStatus>('loading')
   const [modelError, setModelError] = useState<string | null>(null)
+  const [dbReady, setDbReady] = useState(false)
+  const [dbError, setDbError] = useState<string | null>(null)
   const [active, setActive] = useState(false)
-  const [emotion, setEmotion] = useState<EmotionResult | null>(null)
+  const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
-
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const loopActiveRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
+
     loadFaceApiModels()
       .then(() => {
         if (cancelled) return
@@ -38,70 +35,53 @@ export default function Home() {
         setModelError(message)
         setModelStatus('error')
       })
+
+    db.open()
+      .then(() => {
+        if (cancelled) return
+        console.log('✅ IndexedDB 준비 완료')
+        setDbReady(true)
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        const message = err instanceof Error ? err.message : String(err)
+        console.error('❌ IndexedDB open 실패:', err)
+        setDbError(message)
+      })
+
     return () => {
       cancelled = true
     }
   }, [])
 
-  const startLoop = useCallback(() => {
-    if (loopActiveRef.current) return
-    loopActiveRef.current = true
+  const { currentEmotion, saveError } = useEmotionRecorder({
+    active,
+    videoEl,
+  })
 
-    const tick = async () => {
-      if (!loopActiveRef.current) return
-      const video = videoRef.current
-      if (video && video.readyState >= 2) {
-        try {
-          const result = await analyzeEmotion(video)
-          if (!loopActiveRef.current) return
-          setEmotion(result)
-        } catch (err) {
-          console.error('감정 분석 실패:', err)
-        }
-      }
-      if (loopActiveRef.current) {
-        setTimeout(tick, ANALYSIS_INTERVAL_MS)
-      }
-    }
-    tick()
+  const handleCameraReady = useCallback((video: HTMLVideoElement) => {
+    setVideoEl(video)
+    setCameraError(null)
   }, [])
-
-  const stopLoop = useCallback(() => {
-    loopActiveRef.current = false
-  }, [])
-
-  const handleCameraReady = useCallback(
-    (video: HTMLVideoElement) => {
-      videoRef.current = video
-      setCameraError(null)
-      startLoop()
-    },
-    [startLoop],
-  )
 
   const handleCameraError = useCallback((err: Error) => {
     setCameraError(err.message)
     setActive(false)
-    setEmotion(null)
+    setVideoEl(null)
   }, [])
 
-  useEffect(() => {
-    if (!active) {
-      stopLoop()
-      videoRef.current = null
-    }
-  }, [active, stopLoop])
-
   const handleStart = () => {
-    if (modelStatus !== 'ready') return
+    if (modelStatus !== 'ready' || !dbReady) return
     setCameraError(null)
     setActive(true)
   }
 
   const handleStop = () => {
     setActive(false)
-    setEmotion(null)
+    setVideoEl(null)
   }
+
+  const startDisabled = active || modelStatus !== 'ready' || !dbReady
 
   return (
     <main className="min-h-screen bg-ink-50 px-6 py-12">
@@ -109,7 +89,7 @@ export default function Home() {
         <header className="text-center">
           <h1 className="text-2xl font-semibold text-ink-900">온마음</h1>
           <p className="mt-2 text-sm text-ink-500">
-            Step 2 · 실시간 감정 분석
+            Step 3 · 1분 집계 + IndexedDB 저장
           </p>
         </header>
 
@@ -121,6 +101,11 @@ export default function Home() {
         {modelStatus === 'error' && (
           <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-risk-warning">
             ❌ 모델 로드 실패: {modelError}
+          </div>
+        )}
+        {dbError && (
+          <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-risk-warning">
+            ❌ 데이터 저장 불가 환경입니다 (IndexedDB): {dbError}
           </div>
         )}
 
@@ -136,11 +121,17 @@ export default function Home() {
           </div>
         )}
 
+        {saveError && (
+          <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-risk-warning">
+            ❌ 데이터 저장 실패: {saveError.message}
+          </div>
+        )}
+
         <div className="flex gap-3">
           <button
             type="button"
             onClick={handleStart}
-            disabled={active || modelStatus !== 'ready'}
+            disabled={startDisabled}
             className="flex-1 rounded-full bg-risk-good px-6 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             측정 시작
@@ -155,7 +146,9 @@ export default function Home() {
           </button>
         </div>
 
-        {active && <EmotionDisplay emotion={emotion} />}
+        {active && <EmotionDisplay emotion={currentEmotion} />}
+
+        <RecentRecords />
       </section>
     </main>
   )
