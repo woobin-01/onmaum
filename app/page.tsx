@@ -5,6 +5,7 @@ import CameraView from '@/components/CameraView'
 import DailyRiskCard from '@/components/DailyRiskCard'
 import EmotionDisplay from '@/components/EmotionDisplay'
 import RecentRecords from '@/components/RecentRecords'
+import TrendChart from '@/components/TrendChart'
 import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
 import { loadFaceApiModels } from '@/lib/emotionAnalysis'
 import { db } from '@/lib/db'
@@ -90,11 +91,13 @@ export default function Home() {
         <header className="text-center">
           <h1 className="text-2xl font-semibold text-ink-900">온마음</h1>
           <p className="mt-2 text-sm text-ink-500">
-            Step 4 · 위험도 계산 + 컬러 시스템
+            Step 5 · 추세 그래프
           </p>
         </header>
 
         <DailyRiskCard />
+
+        <TrendChart />
 
         {modelStatus === 'loading' && (
           <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-ink-600">
