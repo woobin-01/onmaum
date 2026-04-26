@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import CameraView from '@/components/CameraView'
+import DailyRiskCard from '@/components/DailyRiskCard'
 import EmotionDisplay from '@/components/EmotionDisplay'
 import RecentRecords from '@/components/RecentRecords'
 import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
@@ -89,9 +90,11 @@ export default function Home() {
         <header className="text-center">
           <h1 className="text-2xl font-semibold text-ink-900">온마음</h1>
           <p className="mt-2 text-sm text-ink-500">
-            Step 3 · 1분 집계 + IndexedDB 저장
+            Step 4 · 위험도 계산 + 컬러 시스템
           </p>
         </header>
+
+        <DailyRiskCard />
 
         {modelStatus === 'loading' && (
           <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-ink-600">
