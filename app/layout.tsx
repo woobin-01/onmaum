@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ContactsFooter from "@/components/ContactsFooter";
 import Navigation from "@/components/Navigation";
 import "./globals.css";
 
@@ -17,6 +18,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-ink-50">
         <Navigation />
         <div className="flex-1">{children}</div>
+        <ContactsFooter />
       </body>
     </html>
   );
