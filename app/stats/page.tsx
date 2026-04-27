@@ -1,10 +1,24 @@
 'use client'
 
+import { useLiveQuery } from 'dexie-react-hooks'
 import DailyRiskCard from '@/components/DailyRiskCard'
 import RecentRecords from '@/components/RecentRecords'
+import RiskWarningModal from '@/components/RiskWarningModal'
+import SelfCareTip from '@/components/SelfCareTip'
 import TrendChart from '@/components/TrendChart'
+import { useWarningDismissal } from '@/hooks/useWarningDismissal'
+import { getEmotionsByDate } from '@/lib/emotionRepository'
+import { aggregateDailyRisk } from '@/lib/riskCalculator'
 
 export default function StatsPage() {
+  const today = new Date().toLocaleDateString('en-CA')
+  const todayRecords = useLiveQuery(() => getEmotionsByDate(today), [today])
+  const todayRisk = todayRecords
+    ? aggregateDailyRisk(todayRecords, today)
+    : null
+  const { dismissed, dismiss } = useWarningDismissal(today)
+  const showWarning = todayRisk?.riskLevel === 'warning' && !dismissed
+
   return (
     <main className="min-h-screen px-6 py-8">
       <section className="mx-auto w-full max-w-md space-y-6">
@@ -15,8 +29,11 @@ export default function StatsPage() {
 
         <DailyRiskCard />
         <TrendChart />
+        <SelfCareTip />
         <RecentRecords />
       </section>
+
+      <RiskWarningModal open={showWarning} onClose={dismiss} />
     </main>
   )
 }
