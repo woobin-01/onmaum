@@ -25,7 +25,14 @@ export default function ReactiveOrb({ className }: Props) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const mouse = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.48 }
+    // 부모 기준 마우스 좌표 (canvas 내부 좌표계와 일치)
+    function initialMousePos() {
+      const rect = canvas?.getBoundingClientRect()
+      const w = rect?.width ?? window.innerWidth
+      const h = rect?.height ?? window.innerHeight
+      return { x: w * 0.72, y: h * 0.48 }
+    }
+    const mouse = initialMousePos()
     const smooth = { x: mouse.x, y: mouse.y }
 
     const blobAngles = Array.from({ length: N }, (_, i) => (i / N) * Math.PI * 2)
@@ -43,13 +50,21 @@ export default function ReactiveOrb({ className }: Props) {
 
     function resize() {
       if (!canvas) return
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      // parent 크기 기준 (canvas internal pixel = parent display size)
+      const parent = canvas.parentElement
+      const rect = parent
+        ? parent.getBoundingClientRect()
+        : { width: window.innerWidth, height: window.innerHeight }
+      canvas.width = rect.width
+      canvas.height = rect.height
     }
 
     function handleMouse(e: MouseEvent) {
-      mouse.x = e.clientX
-      mouse.y = e.clientY
+      // canvas 내부 좌표계로 변환 (parent 기준)
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      mouse.x = e.clientX - rect.left
+      mouse.y = e.clientY - rect.top
     }
 
     let visible = true

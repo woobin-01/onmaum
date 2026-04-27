@@ -12,13 +12,13 @@ export default function LandingHero() {
       <ReactiveOrb />
 
       <div className="relative z-10 max-w-[560px] px-[52px]">
-        <div className="r mb-6 flex items-center gap-[10px] text-[10px] font-light uppercase tracking-[0.2em] text-[#6BAB9A]">
+        <div className="mb-6 flex items-center gap-[10px] text-[10px] font-light uppercase tracking-[0.2em] text-[#6BAB9A]">
           <span className="block h-px w-7 bg-[#6BAB9A] opacity-60" />
           마음 상태 모니터링
         </div>
 
         <h1
-          className="r d1 mb-8 font-thin leading-[0.97] tracking-[-0.04em]"
+          className="mb-8 font-thin leading-[0.97] tracking-[-0.04em]"
           style={{ fontSize: 'clamp(48px, 6.5vw, 88px)' }}
         >
           마음을
@@ -28,12 +28,12 @@ export default function LandingHero() {
           살피는 일.
         </h1>
 
-        <p className="r d2 mb-12 max-w-[360px] text-[13px] font-light leading-[1.85] text-[rgba(240,237,230,0.38)]">
+        <p className="mb-12 max-w-[360px] text-[13px] font-light leading-[1.85] text-[rgba(240,237,230,0.38)]">
           웹캠으로 표정을 분석하고 1분 단위로 마음 상태를 기록합니다.
           모든 데이터는 브라우저에만 저장되어, 누구도 들여다볼 수 없습니다.
         </p>
 
-        <div className="r d3 flex items-center gap-[14px]">
+        <div className="flex items-center gap-[14px]">
           <Link
             href="/measure"
             className="rounded-full bg-[#6BAB9A] px-[30px] py-[13px] text-[12px] font-normal uppercase tracking-[0.08em] text-white shadow-[0_0_40px_rgba(107,171,154,0.28),0_0_80px_rgba(107,171,154,0.1)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_48px_rgba(107,171,154,0.4),0_0_100px_rgba(107,171,154,0.15)]"
