@@ -7,6 +7,15 @@
   --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', sans-serif;
 }
 
+/* 랜딩 페이지 다크 테마 */
+[data-theme="landing"] {
+  --background: #050503;
+  --foreground: #F0EDE6;
+  --landing-muted: rgba(240, 237, 230, 0.38);
+  --landing-dim: rgba(240, 237, 230, 0.14);
+  --landing-border: rgba(255, 255, 255, 0.06);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
