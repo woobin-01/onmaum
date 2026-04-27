@@ -16,6 +16,40 @@
   --landing-border: rgba(255, 255, 255, 0.06);
 }
 
+/* 스크롤 리빌 (랜딩 전용 .r 클래스) */
+.r {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.r.in {
+  opacity: 1;
+  transform: none;
+}
+.r.d1 { transition-delay: 0.08s; }
+.r.d2 { transition-delay: 0.16s; }
+.r.d3 { transition-delay: 0.26s; }
+.r.d4 { transition-delay: 0.38s; }
+
+/* 스크롤 힌트 펄스 (Hero 하단) */
+@keyframes scrollPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scaleY(0.4);
+    transform-origin: top;
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+.animate-scrollPulse {
+  animation: scrollPulse 2.2s ease-in-out infinite;
+  transform-origin: top;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
