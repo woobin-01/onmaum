@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import CameraView from '@/components/CameraView'
-import DailyRiskCard from '@/components/DailyRiskCard'
 import EmotionDisplay from '@/components/EmotionDisplay'
-import RecentRecords from '@/components/RecentRecords'
-import TrendChart from '@/components/TrendChart'
 import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
 import { loadFaceApiModels } from '@/lib/emotionAnalysis'
 import { db } from '@/lib/db'
@@ -41,7 +38,6 @@ export default function Home() {
     db.open()
       .then(() => {
         if (cancelled) return
-        console.log('✅ IndexedDB 준비 완료')
         setDbReady(true)
       })
       .catch((err: unknown) => {
@@ -86,18 +82,12 @@ export default function Home() {
   const startDisabled = active || modelStatus !== 'ready' || !dbReady
 
   return (
-    <main className="min-h-screen bg-ink-50 px-6 py-12">
+    <main className="min-h-screen px-6 py-8">
       <section className="mx-auto w-full max-w-md space-y-6">
         <header className="text-center">
-          <h1 className="text-2xl font-semibold text-ink-900">온마음</h1>
-          <p className="mt-2 text-sm text-ink-500">
-            Step 5 · 추세 그래프
-          </p>
+          <h1 className="text-2xl font-semibold text-ink-900">측정</h1>
+          <p className="mt-2 text-sm text-ink-500">실시간 감정 분석</p>
         </header>
-
-        <DailyRiskCard />
-
-        <TrendChart />
 
         {modelStatus === 'loading' && (
           <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-ink-600">
@@ -111,7 +101,7 @@ export default function Home() {
         )}
         {dbError && (
           <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-risk-warning">
-            ❌ 데이터 저장 불가 환경입니다 (IndexedDB): {dbError}
+            ❌ 데이터 저장 불가 환경입니다: {dbError}
           </div>
         )}
 
@@ -153,8 +143,6 @@ export default function Home() {
         </div>
 
         {active && <EmotionDisplay emotion={currentEmotion} />}
-
-        <RecentRecords />
       </section>
     </main>
   )
