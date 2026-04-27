@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import ContactsFooter from "@/components/ContactsFooter";
-import Navigation from "@/components/Navigation";
+import AppChrome from "@/components/AppChrome";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import "./globals.css";
 
@@ -33,9 +32,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-ink-50">
-        <Navigation />
-        <div className="flex-1">{children}</div>
-        <ContactsFooter />
+        <AppChrome>{children}</AppChrome>
         <ServiceWorkerRegistrar />
       </body>
     </html>

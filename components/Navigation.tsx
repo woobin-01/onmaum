@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const TABS = [
-  { href: '/', label: '측정' },
+  { href: '/measure', label: '측정' },
   { href: '/stats', label: '통계' },
 ] as const
 
