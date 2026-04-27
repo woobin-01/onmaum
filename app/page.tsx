@@ -1,7 +1,12 @@
 'use client'
 
+import LandingCTA from '@/components/LandingCTA'
+import LandingData from '@/components/LandingData'
+import LandingFeatures from '@/components/LandingFeatures'
+import LandingFooter from '@/components/LandingFooter'
 import LandingHero from '@/components/LandingHero'
 import LandingNav from '@/components/LandingNav'
+import LandingRisk from '@/components/LandingRisk'
 import { useScrollReveal } from '@/hooks/useScrollReveal'
 
 export default function LandingPage() {
@@ -14,7 +19,11 @@ export default function LandingPage() {
     >
       <LandingNav />
       <LandingHero />
-      {/* TODO: Features / Data / Risk / CTA / Footer (다음 task) */}
+      <LandingFeatures />
+      <LandingData />
+      <LandingRisk />
+      <LandingCTA />
+      <LandingFooter />
     </div>
   )
 }
