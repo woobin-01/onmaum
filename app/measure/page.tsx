@@ -3,13 +3,26 @@
 import { useCallback, useEffect, useState } from 'react'
 import CameraView from '@/components/CameraView'
 import EmotionDisplay from '@/components/EmotionDisplay'
+import Onboarding from '@/components/Onboarding'
 import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
 import { loadFaceApiModels } from '@/lib/emotionAnalysis'
 import { db } from '@/lib/db'
 
 type ModelStatus = 'loading' | 'ready' | 'error'
 
+const ONBOARDED_KEY = 'onmaum_onboarded'
+
+function readOnboarded(): boolean {
+  if (typeof window === 'undefined') return true
+  try {
+    return localStorage.getItem(ONBOARDED_KEY) === 'true'
+  } catch {
+    return true
+  }
+}
+
 export default function Home() {
+  const [onboarded, setOnboarded] = useState<boolean>(readOnboarded)
   const [modelStatus, setModelStatus] = useState<ModelStatus>('loading')
   const [modelError, setModelError] = useState<string | null>(null)
   const [dbReady, setDbReady] = useState(false)
@@ -57,6 +70,15 @@ export default function Home() {
     videoEl,
   })
 
+  const handleOnboardingDone = useCallback(() => {
+    try {
+      localStorage.setItem(ONBOARDED_KEY, 'true')
+    } catch (err) {
+      console.error('localStorage 쓰기 실패:', err)
+    }
+    setOnboarded(true)
+  }, [])
+
   const handleCameraReady = useCallback((video: HTMLVideoElement) => {
     setVideoEl(video)
     setCameraError(null)
@@ -80,6 +102,10 @@ export default function Home() {
   }
 
   const startDisabled = active || modelStatus !== 'ready' || !dbReady
+
+  if (!onboarded) {
+    return <Onboarding onDone={handleOnboardingDone} />
+  }
 
   return (
     <main className="min-h-screen px-6 py-8">
