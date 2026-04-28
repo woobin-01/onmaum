@@ -17,11 +17,13 @@ describe('ThemeToggle', () => {
     document.documentElement.removeAttribute('data-theme')
   })
 
-  it('aria-label 에 현재 테마 노출', () => {
+  it('aria-label 형식: "테마 전환: 현재 X, 클릭하면 Y" (X/Y는 한국어 라벨)', () => {
     renderToggle()
     expect(screen.getByRole('button')).toHaveAttribute(
       'aria-label',
-      expect.stringMatching(/auto|dark|light/),
+      expect.stringMatching(
+        /^테마 전환: 현재 (라이트|다크|자동), 클릭하면 (라이트|다크|자동)$/,
+      ),
     )
   })
 

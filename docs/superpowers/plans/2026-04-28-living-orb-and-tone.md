@@ -1094,11 +1094,13 @@ describe('ThemeToggle', () => {
     document.documentElement.removeAttribute('data-theme')
   })
 
-  it('aria-label 에 현재 테마 노출', () => {
+  it('aria-label 형식: "테마 전환: 현재 X, 클릭하면 Y" (X/Y는 한국어 라벨)', () => {
     renderToggle()
     expect(screen.getByRole('button')).toHaveAttribute(
       'aria-label',
-      expect.stringMatching(/auto|dark|light/),
+      expect.stringMatching(
+        /^테마 전환: 현재 (라이트|다크|자동), 클릭하면 (라이트|다크|자동)$/,
+      ),
     )
   })
 
@@ -1144,7 +1146,13 @@ const ICON: Record<Theme, string> = {
   auto: '◐',
 }
 
-const NEXT_LABEL: Record<Theme, Theme> = {
+const LABEL: Record<Theme, string> = {
+  light: '라이트',
+  dark: '다크',
+  auto: '자동',
+}
+
+const NEXT: Record<Theme, Theme> = {
   light: 'dark',
   dark: 'auto',
   auto: 'light',
@@ -1160,7 +1168,7 @@ export default function ThemeToggle({ className }: Props) {
     <button
       type="button"
       onClick={cycleTheme}
-      aria-label={`테마 전환: 현재 ${theme}, 클릭하면 ${NEXT_LABEL[theme]}`}
+      aria-label={`테마 전환: 현재 ${LABEL[theme]}, 클릭하면 ${LABEL[NEXT[theme]]}`}
       className={
         className ??
         'inline-flex h-7 w-7 items-center justify-center rounded-full text-[12px] text-[var(--fg-muted)] transition-colors hover:text-[var(--fg)]'
