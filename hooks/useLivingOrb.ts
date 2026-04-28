@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import {
   hueFromWeeklyEmotion,
   motionFromFrequency,
+  NEUTRAL_HUE,
   opacityFromCount,
   saturationFromIntensity,
 } from '@/lib/orbAxes'
@@ -14,7 +15,6 @@ import { aggregateWeeklyEmotion } from '@/lib/weeklyEmotion'
 import type { EmotionResult } from '@/lib/emotionAnalysis'
 
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
-const NEUTRAL_HUE = 'rgb(107,171,154)'
 const NEUTRAL_GRAY = 'rgb(163,163,163)'
 
 export type OrbFallback = 'idle' | 'inactive2w' | 'error' | null
