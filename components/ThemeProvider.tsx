@@ -1,7 +1,7 @@
 // components/ThemeProvider.tsx
 'use client'
 
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import { useTheme, type Theme, type ResolvedTheme } from '@/hooks/useTheme'
 
 interface ThemeContextValue {
@@ -14,7 +14,11 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const value = useTheme()
+  const { theme, resolvedTheme, setTheme, cycleTheme } = useTheme()
+  const value = useMemo(
+    () => ({ theme, resolvedTheme, setTheme, cycleTheme }),
+    [theme, resolvedTheme, setTheme, cycleTheme],
+  )
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
