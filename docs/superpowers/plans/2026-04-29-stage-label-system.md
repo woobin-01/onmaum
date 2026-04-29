@@ -634,7 +634,7 @@ Expected: 새 4개 테스트 실패 (기존 코드는 `role="img"`만, variant �
 // components/LivingOrb.tsx
 'use client'
 
-import { useId } from 'react'
+import { useId, type AriaAttributes, type AriaRole } from 'react'
 import { type OrbStage } from '@/lib/orbStages'
 import { STAGE_KOREAN_NAMES } from '@/lib/stageLabels'
 
@@ -657,6 +657,15 @@ const STAGE_BLUR_PX: Record<OrbStage, number> = {
   living: 0,
 }
 
+type A11yProps = AriaAttributes & { role: AriaRole }
+
+/**
+ * Living Orb SVG 컴포넌트.
+ *
+ * @param variant `'decoration'` (default — 우상단 호스트 등 데코) → role="presentation" + aria-hidden="true".
+ *                `'primary'` (/orb 페이지 등 큰 구) → role="img" + 한국어 aria-label.
+ *                `data-variant` 속성도 함께 노출되어 외부 CSS targeting 가능 (예: `[data-variant="primary"]`).
+ */
 export default function LivingOrb({
   stage,
   opacity,
@@ -668,7 +677,8 @@ export default function LivingOrb({
   variant = 'decoration',
 }: Props) {
   const reactId = useId()
-  // useId() 는 ":r0:" 같은 콜론 포함 형식 → SVG attribute 에 안전하지만 가독성 위해 sanitize.
+  // useId() 는 ":r0:" 형식 → SVG ID 와 url(#...) 참조엔 안전하지만 CSS 셀렉터(#id) 에선 콜론 escape 필요.
+  // 미래 CSS targeting 안전성 위해 sanitize.
   const uid = `lo-${reactId.replace(/:/g, '')}`
   const filterId = `${uid}-blur`
   const gradientId = `${uid}-grad`
@@ -684,14 +694,14 @@ export default function LivingOrb({
       ? 'none'
       : `orbBreathe ${breathDuration}s ease-in-out infinite`
 
-  const a11yProps =
+  const a11yProps: A11yProps =
     variant === 'primary'
       ? {
-          role: 'img' as const,
+          role: 'img',
           'aria-label': `감정 오브 — ${STAGE_KOREAN_NAMES[stage]}`,
         }
       : {
-          role: 'presentation' as const,
+          role: 'presentation',
           'aria-hidden': true,
         }
 

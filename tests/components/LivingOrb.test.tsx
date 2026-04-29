@@ -126,6 +126,10 @@ describe('LivingOrb', () => {
   })
 
   it('useId 사용 — 같은 instance 의 두 렌더에서 id 안정 (모듈 카운터가 아님을 검증)', () => {
+    // happy-dom 은 SSR 을 시뮬레이션하지 않으므로 실제 SSR→hydration 간 ID 일치 검증은 불가.
+    // 'use client' directive 가 컴포넌트를 CSR 로만 강제하므로 현재 위험은 없음.
+    // 이 테스트는 *같은 인스턴스의 rerender 안정성*만 검증 — useId 가 매 렌더마다 다른 값을
+    // 반환하면 SSR/Strict Mode 시 hydration mismatch 가 발생한다는 신호.
     const { container, rerender } = render(
       <LivingOrb
         stage="forming"
@@ -162,6 +166,34 @@ describe('LivingOrb', () => {
     )
     expect(container.querySelector('svg')?.getAttribute('aria-label')).toBe(
       '감정 오브 — 비어있음',
+    )
+  })
+
+  it('data-variant 속성으로 variant 노출 (외부 CSS targeting public API)', () => {
+    const { container, rerender } = render(
+      <LivingOrb
+        stage="forming"
+        opacity={0.6}
+        hue="rgb(107,171,154)"
+        saturation={0.5}
+        motion={0.5}
+      />,
+    )
+    expect(container.querySelector('svg')?.getAttribute('data-variant')).toBe(
+      'decoration',
+    )
+    rerender(
+      <LivingOrb
+        stage="forming"
+        opacity={0.6}
+        hue="rgb(107,171,154)"
+        saturation={0.5}
+        motion={0.5}
+        variant="primary"
+      />,
+    )
+    expect(container.querySelector('svg')?.getAttribute('data-variant')).toBe(
+      'primary',
     )
   })
 })
