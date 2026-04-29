@@ -33,8 +33,15 @@ export default function StatsPage() {
     <main className="min-h-screen px-6 py-8">
       <section className="mx-auto w-full max-w-md space-y-6">
         <header className="text-center">
-          <h1 className="text-2xl font-semibold text-ink-900">통계</h1>
-          <p className="mt-2 text-sm text-ink-500">오늘과 최근 기록</p>
+          <p className="mb-2 text-[10px] font-light uppercase tracking-[0.2em] text-[var(--accent)]">
+            — 통계
+          </p>
+          <h1 className="text-3xl font-thin tracking-[-0.02em] text-[var(--fg)]">
+            이번 주의 마음
+          </h1>
+          <p className="mt-2 text-[12px] font-light text-[var(--fg-muted)]">
+            오늘과 최근 기록
+          </p>
         </header>
 
         <NotificationToggle />

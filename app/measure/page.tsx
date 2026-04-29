@@ -38,13 +38,13 @@ export default function Home() {
     loadFaceApiModels()
       .then(() => {
         if (cancelled) return
-        console.log('✅ face-api 모델 로드 완료')
+        console.log('face-api 모델 로드 완료')
         setModelStatus('ready')
       })
       .catch((err: unknown) => {
         if (cancelled) return
         const message = err instanceof Error ? err.message : String(err)
-        console.error('❌ face-api 모델 로드 실패:', err)
+        console.error('face-api 모델 로드 실패:', err)
         setModelError(message)
         setModelStatus('error')
       })
@@ -57,7 +57,7 @@ export default function Home() {
       .catch((err: unknown) => {
         if (cancelled) return
         const message = err instanceof Error ? err.message : String(err)
-        console.error('❌ IndexedDB open 실패:', err)
+        console.error('IndexedDB open 실패:', err)
         setDbError(message)
       })
 
@@ -124,23 +124,30 @@ export default function Home() {
     <main className="min-h-screen px-6 py-8">
       <section className="mx-auto w-full max-w-md space-y-6">
         <header className="text-center">
-          <h1 className="text-2xl font-semibold text-ink-900">측정</h1>
-          <p className="mt-2 text-sm text-ink-500">실시간 감정 분석</p>
+          <p className="mb-2 text-[10px] font-light uppercase tracking-[0.2em] text-[var(--accent)]">
+            — 측정
+          </p>
+          <h1 className="text-3xl font-thin tracking-[-0.02em] text-[var(--fg)]">
+            오늘의 마음 상태
+          </h1>
+          <p className="mt-2 text-[12px] font-light text-[var(--fg-muted)]">
+            실시간 감정 분석
+          </p>
         </header>
 
         {modelStatus === 'loading' && (
-          <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-ink-600">
-            ⏳ face-api 모델 로딩 중...
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--fg-muted)]">
+            모델을 불러오고 있습니다
           </div>
         )}
         {modelStatus === 'error' && (
-          <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-risk-warning">
-            ❌ 모델 로드 실패: {modelError}
+          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+            모델을 불러오지 못했습니다 — {modelError}
           </div>
         )}
         {dbError && (
-          <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-risk-warning">
-            ❌ 데이터 저장 불가 환경입니다: {dbError}
+          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+            데이터 저장이 어려운 환경입니다 — {dbError}
           </div>
         )}
 
@@ -151,14 +158,14 @@ export default function Home() {
         />
 
         {cameraError && (
-          <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-risk-warning">
-            ❌ 카메라 오류: {cameraError}
+          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+            카메라 오류 — {cameraError}
           </div>
         )}
 
         {saveError && (
-          <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-risk-warning">
-            ❌ 데이터 저장 실패: {saveError.message}
+          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+            저장 실패 — {saveError.message}
           </div>
         )}
 
@@ -167,7 +174,7 @@ export default function Home() {
             type="button"
             onClick={handleStart}
             disabled={startDisabled}
-            className="flex-1 rounded-full bg-risk-good px-6 py-3 font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 rounded-full bg-[var(--accent)] px-6 py-3 text-[12px] font-normal uppercase tracking-[0.08em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             측정 시작
           </button>
@@ -175,7 +182,7 @@ export default function Home() {
             type="button"
             onClick={handleStop}
             disabled={!active}
-            className="flex-1 rounded-full border border-ink-300 bg-white px-6 py-3 font-medium text-ink-700 transition-colors hover:bg-ink-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex-1 rounded-full border border-[var(--border)] bg-[var(--bg-elev)] px-6 py-3 text-[12px] font-normal uppercase tracking-[0.08em] text-[var(--fg)] transition-colors hover:bg-[var(--bg-tint)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             측정 정지
           </button>
