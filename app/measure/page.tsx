@@ -77,6 +77,10 @@ export default function Home() {
     // 측정 중일 때만 live emotion 을 Provider 에 전달.
     // 정지 시 setLive(null, false) 로 reset → orb 가 weekly aggregate 기반 hue 로 복귀.
     setLive(active ? currentEmotion : null, active)
+    // unmount(다른 페이지로 navigate 등) 시 Provider 의 active=true 가 stale 로 남는 것 방지.
+    return () => {
+      setLive(null, false)
+    }
   }, [setLive, active, currentEmotion])
 
   const handleOnboardingDone = useCallback(() => {

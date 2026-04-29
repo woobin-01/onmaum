@@ -1148,15 +1148,22 @@ export default function AppChrome({ children }: Props) {
 
 ```tsx
 import { useLivingOrbInput } from '@/components/LivingOrbProvider'
-// ...
+
+// ...inside the component, after useEmotionRecorder:
 const { setLive } = useLivingOrbInput()
-// detection 결과 도달 시:
-setLive(currentEmotion, true)
-// detection 정지 시:
-setLive(null, false)
+
+useEffect(() => {
+  // 측정 중일 때만 live emotion 을 Provider 에 전달.
+  // 정지 시 setLive(null, false) 로 reset → orb 가 weekly aggregate 기반 hue 로 복귀.
+  setLive(active ? currentEmotion : null, active)
+  // unmount(다른 페이지로 navigate 등) 시 Provider 의 active=true 가 stale 로 남는 것 방지.
+  return () => {
+    setLive(null, false)
+  }
+}, [setLive, active, currentEmotion])
 ```
 
-(정확한 호출 위치는 `app/measure/page.tsx` 의 기존 hook 흐름에 맞게 결정. 측정 중일 때만 `active=true`.)
+useEffect 위치는 `useEmotionRecorder` 다음, `handleOnboardingDone` 앞.
 
 - [ ] **Step 4: 회귀 + 시각 검증**
 
