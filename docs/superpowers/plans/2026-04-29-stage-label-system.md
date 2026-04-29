@@ -240,14 +240,19 @@ describe('useStageLabel', () => {
     rerender({ stage: 'forming' })
     expect(result.current.visible).toBe(true)
     expect(result.current.message).toBe('결이 보이기 시작했어요')
-    // 이전 타이머가 살아있었다면 awakening 시작 + 3000ms = 2500ms 더 가면 false 가 돼버린다.
-    // 새 타이머 기준이면 3000ms 더 가야 false. 검증:
+    // 누적 t=3000 — awakening 의 옛 타이머가 cleared 되지 않았다면 만료해서 false 가 되어버림.
     act(() => {
       vi.advanceTimersByTime(2500)
     })
     expect(result.current.visible).toBe(true)
+    // 누적 t=3499 — forming 새 타이머 만료(t=3500) 1ms 전. 여전히 visible=true.
     act(() => {
-      vi.advanceTimersByTime(600)
+      vi.advanceTimersByTime(499)
+    })
+    expect(result.current.visible).toBe(true)
+    // 누적 t=3501 — forming 새 타이머 만료 직후.
+    act(() => {
+      vi.advanceTimersByTime(2)
     })
     expect(result.current.visible).toBe(false)
   })
@@ -288,8 +293,9 @@ export interface StageLabelOutput {
 function readMax(): OrbStage {
   if (typeof window === 'undefined') return 'empty'
   try {
-    const v = localStorage.getItem(STORAGE_KEY) as OrbStage | null
-    if (v && (STAGE_ORDER as readonly string[]).includes(v)) return v
+    const v = localStorage.getItem(STORAGE_KEY)
+    // includes 로 narrowing 후 cast — type lie 방지 (validation 후 narrow)
+    if (v && (STAGE_ORDER as readonly string[]).includes(v)) return v as OrbStage
   } catch {}
   return 'empty'
 }

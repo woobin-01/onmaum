@@ -20,8 +20,8 @@ export interface StageLabelOutput {
 function readMax(): OrbStage {
   if (typeof window === 'undefined') return 'empty'
   try {
-    const v = localStorage.getItem(STORAGE_KEY) as OrbStage | null
-    if (v && (STAGE_ORDER as readonly string[]).includes(v)) return v
+    const v = localStorage.getItem(STORAGE_KEY)
+    if (v && (STAGE_ORDER as readonly string[]).includes(v)) return v as OrbStage
   } catch {}
   return 'empty'
 }
