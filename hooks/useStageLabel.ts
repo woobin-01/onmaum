@@ -8,9 +8,8 @@ const STORAGE_KEY = 'onmaum_orb_stage_max'
 
 const FADE_IN_MS = 300
 const HOLD_MS = 2700
-const FADE_OUT_MS = 600
-// visible=false 트리거 시점. CSS transition 600ms 페이드아웃 후 트리거 시점 기준 3.6초에 완전 사라짐.
-const VISIBLE_MS = FADE_IN_MS + HOLD_MS // 3000ms
+// 페이드아웃 600ms 는 CSS transition 이 처리 (JS 미사용). 트리거 시점 기준 총 3.6초에 완전 사라짐.
+const VISIBLE_MS = FADE_IN_MS + HOLD_MS // 3000ms — visible=false 트리거 시점
 
 export interface StageLabelOutput {
   visible: boolean

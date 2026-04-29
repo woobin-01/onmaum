@@ -1,8 +1,11 @@
 // tests/integration/LivingOrbHost.integration.test.tsx
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { render, renderHook, screen, act, waitFor } from '@testing-library/react'
 import LivingOrbHost from '@/components/LivingOrbHost'
-import { LivingOrbProvider } from '@/components/LivingOrbProvider'
+import {
+  LivingOrbProvider,
+  useLivingOrbInput,
+} from '@/components/LivingOrbProvider'
 import { db } from '@/lib/db'
 import type { EmotionRecord } from '@/lib/db'
 
@@ -83,7 +86,21 @@ describe('LivingOrbHost integration', () => {
         <LivingOrbHost />
       </LivingOrbProvider>,
     )
-    await new Promise((r) => setTimeout(r, 50))
+    // useLiveQuery 가 records 를 가져와 stage="forming" 으로 전환됐는지로 deterministic 대기.
+    // (data-orb 속성이 'empty' → 'forming' 으로 바뀌는 시점까지 polling)
+    await waitFor(() => {
+      expect(document.querySelector('svg[data-orb]')?.getAttribute('data-orb')).toBe(
+        'forming',
+      )
+    })
     expect(screen.queryByRole('status')).toBeNull()
+  })
+})
+
+describe('useLivingOrbInput', () => {
+  it('Provider 밖에서 호출 시 명확한 에러 throw', () => {
+    expect(() => renderHook(() => useLivingOrbInput())).toThrow(
+      'useLivingOrbInput must be used within <LivingOrbProvider>',
+    )
   })
 })

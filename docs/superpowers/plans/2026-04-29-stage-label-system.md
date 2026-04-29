@@ -1076,6 +1076,110 @@ git commit -m "docs(plan): Task 9/10 갱신·Task 11/12 폐기 메모 — 새 st
 
 ---
 
+## Task 7: app/`/measure` wiring (Provider + Host 트리 + setLive 호출)
+
+**Files:**
+- Modify: `app/layout.tsx` — `LivingOrbProvider` 트리 추가
+- Modify: `components/AppChrome.tsx` — 비랜딩 페이지에서 `LivingOrbHost` 렌더
+- Modify: `app/measure/page.tsx` (또는 `useEmotionRecorder` 사용처) — face detection 시 `setLive(emotion, active)` 호출
+
+> **추가 사유 (2026-04-29 SL Task 5 review)**: SL Task 5 까지로 시스템 자체는 완성됐지만, runtime 에는 아직 connect 안 됨. Provider/Host 가 layout 어디에도 mount 안 됐고, `/measure` 가 `setLive` 를 호출하지 않으므로 active orb 가 동작하지 않는다. 이 Task 7 에서 wiring 을 명시적으로 처리.
+
+- [ ] **Step 1: `app/layout.tsx` 수정**
+
+```tsx
+// app/layout.tsx — 핵심 변경: AppChrome 을 LivingOrbProvider 로 wrap
+import { LivingOrbProvider } from '@/components/LivingOrbProvider'
+
+// ...
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="ko" className="h-full antialiased">
+      <body className="min-h-full flex flex-col bg-ink-50">
+        <LivingOrbProvider>
+          <AppChrome>{children}</AppChrome>
+        </LivingOrbProvider>
+        <ServiceWorkerRegistrar />
+      </body>
+    </html>
+  );
+}
+```
+
+- [ ] **Step 2: `components/AppChrome.tsx` 수정**
+
+랜딩(`/`) 외 모든 페이지에서 `LivingOrbHost` 렌더:
+
+```tsx
+'use client'
+
+import { usePathname } from 'next/navigation'
+import ContactsFooter from '@/components/ContactsFooter'
+import LivingOrbHost from '@/components/LivingOrbHost'
+import Navigation from '@/components/Navigation'
+
+interface Props {
+  children: React.ReactNode
+}
+
+export default function AppChrome({ children }: Props) {
+  const pathname = usePathname()
+  const isLanding = pathname === '/'
+
+  if (isLanding) {
+    return <>{children}</>
+  }
+
+  return (
+    <>
+      <Navigation />
+      <div className="flex-1">{children}</div>
+      <ContactsFooter />
+      <LivingOrbHost />
+    </>
+  )
+}
+```
+
+- [ ] **Step 3: `/measure` 페이지에서 `setLive` 호출**
+
+`app/measure/page.tsx` 의 `useEmotionRecorder` 또는 face detection 결과 처리부에:
+
+```tsx
+import { useLivingOrbInput } from '@/components/LivingOrbProvider'
+// ...
+const { setLive } = useLivingOrbInput()
+// detection 결과 도달 시:
+setLive(currentEmotion, true)
+// detection 정지 시:
+setLive(null, false)
+```
+
+(정확한 호출 위치는 `app/measure/page.tsx` 의 기존 hook 흐름에 맞게 결정. 측정 중일 때만 `active=true`.)
+
+- [ ] **Step 4: 회귀 + 시각 검증**
+
+```bash
+npm run test:run 2>&1 | tail -10
+npx tsc --noEmit 2>&1 | tail -10
+```
+
+이후 dev server (`npm run dev`) 띄워 브라우저로:
+- 랜딩(`/`) — 우상단 orb 안 보여야 함
+- `/measure` 외 비랜딩 페이지 — 우상단 orb 보임
+- `/measure` 측정 시작 — orb 색이 live emotion 따라 변화
+- 첫 측정 완료 → `/stats` 등 다른 페이지 이동 → awakening 라벨 등장 (3.6초 후 사라짐)
+
+- [ ] **Step 5: 커밋**
+
+```bash
+git add app/layout.tsx components/AppChrome.tsx app/measure/page.tsx
+git commit -m "feat(integration): LivingOrbProvider 트리 + Host 렌더 + /measure setLive wiring"
+```
+
+---
+
 ## 완료 후 검증
 
 모든 task 완료 후 한 번 더 통합 검증:
@@ -1088,7 +1192,7 @@ npx tsc --noEmit 2>&1 | tail -10
 기대값:
 - 모든 test file PASS
 - tsc 깨끗 (출력 없음)
-- git log 에 7개 새 커밋 (Task 1~6 + 메모 정리)
+- git log 에 8개 새 커밋 (Task 1~7 + 메모 정리)
 
 ---
 
