@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import AppChrome from "@/components/AppChrome";
-import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import { LivingOrbProvider } from "@/components/LivingOrbProvider";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -25,6 +26,24 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+// FOUC 방지 — body 마운트 전에 data-theme 속성을 지정해 다크 토큰이 즉시 적용되도록.
+// useTheme 의 storage key/auto 시간대 분기와 동일해야 함 (lib 와 동기화).
+const themeInitScript = `
+(function(){
+  try {
+    var saved = localStorage.getItem('onmaum_theme') || 'auto';
+    var resolved = saved;
+    if (saved === 'auto') {
+      var h = new Date().getHours();
+      resolved = (h >= 6 && h < 18) ? 'light' : 'dark';
+    }
+    document.documentElement.dataset.theme = resolved;
+  } catch (e) {
+    document.documentElement.dataset.theme = 'light';
+  }
+})();
+`.trim();
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,10 +51,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-ink-50">
-        <LivingOrbProvider>
-          <AppChrome>{children}</AppChrome>
-        </LivingOrbProvider>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body className="flex min-h-full flex-col bg-[var(--bg-base)] text-[var(--fg)]">
+        <ThemeProvider>
+          <LivingOrbProvider>
+            <AppChrome>{children}</AppChrome>
+          </LivingOrbProvider>
+        </ThemeProvider>
         <ServiceWorkerRegistrar />
       </body>
     </html>

@@ -2218,10 +2218,16 @@ git commit -m "feat: ReactiveOrb — light variant 팔레트 분기 (theme prop)
 
 ---
 
-## Task 14: `app/layout.tsx` 통합 (인라인 theme init + Provider 트리 + Host)
+## Task 14: `app/layout.tsx` 통합 (인라인 theme init + Provider 트리)
 
 **Files:**
 - Modify: `app/layout.tsx`
+- Stage (이미 modified): `app/globals.css` — 다크 토큰 정의 (Task 4 결과물, 이번에 함께 커밋)
+
+> **2026-04-29 갱신**:
+> - `MilestoneToast` import/렌더 제거 — 폐기됨 (단계 라벨로 대체).
+> - `LivingOrbHost` 는 layout 에 직접 두지 않음 — `AppChrome` 비랜딩 분기에서 렌더 (랜딩의 hero `ReactiveOrb` 와 우상단 작은 orb 가 동시에 보이는 것을 피하기 위함, 신규 plan SL Task 7 에서 처리됨).
+> - `LivingOrbProvider` 는 SL Task 7 에서 이미 wrap 되어 있으므로, 이 Task 14 에서는 `ThemeProvider` 추가 + `<head>` theme init script + body 다크 토큰 클래스 적용에 집중.
 
 - [ ] **Step 1: layout.tsx 전체 교체**
 
@@ -2229,9 +2235,7 @@ git commit -m "feat: ReactiveOrb — light variant 팔레트 분기 (theme prop)
 // app/layout.tsx
 import type { Metadata, Viewport } from 'next'
 import AppChrome from '@/components/AppChrome'
-import LivingOrbHost from '@/components/LivingOrbHost'
 import { LivingOrbProvider } from '@/components/LivingOrbProvider'
-import MilestoneToast from '@/components/MilestoneToast'
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import './globals.css'
@@ -2285,8 +2289,6 @@ export default function RootLayout({
         <ThemeProvider>
           <LivingOrbProvider>
             <AppChrome>{children}</AppChrome>
-            <LivingOrbHost />
-            <MilestoneToast />
           </LivingOrbProvider>
         </ThemeProvider>
         <ServiceWorkerRegistrar />
