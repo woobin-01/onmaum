@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import LivingOrb from '@/components/LivingOrb'
+import { STAGE_KOREAN_NAMES } from '@/lib/stageLabels'
 
 describe('LivingOrb', () => {
   it('Empty 단계는 stroke 만 (fill 없음)', () => {
@@ -87,5 +88,80 @@ describe('LivingOrb', () => {
     const lowDur = parseFloat(lowStyle.match(/orbBreathe (\d+\.?\d*)s/)?.[1] ?? '0')
     const highDur = parseFloat(highStyle.match(/orbBreathe (\d+\.?\d*)s/)?.[1] ?? '0')
     expect(highDur).toBeLessThan(lowDur)
+  })
+
+  it('variant="decoration" (default) → role="presentation" + aria-hidden="true"', () => {
+    const { container } = render(
+      <LivingOrb
+        stage="forming"
+        opacity={0.6}
+        hue="rgb(107,171,154)"
+        saturation={0.5}
+        motion={0.5}
+      />,
+    )
+    const svg = container.querySelector('svg')
+    expect(svg?.getAttribute('role')).toBe('presentation')
+    expect(svg?.getAttribute('aria-hidden')).toBe('true')
+    expect(svg?.getAttribute('aria-label')).toBeNull()
+  })
+
+  it('variant="primary" → role="img" + 한국어 aria-label', () => {
+    const { container } = render(
+      <LivingOrb
+        stage="forming"
+        opacity={0.6}
+        hue="rgb(107,171,154)"
+        saturation={0.5}
+        motion={0.5}
+        variant="primary"
+      />,
+    )
+    const svg = container.querySelector('svg')
+    expect(svg?.getAttribute('role')).toBe('img')
+    expect(svg?.getAttribute('aria-hidden')).not.toBe('true')
+    expect(svg?.getAttribute('aria-label')).toBe(
+      `감정 오브 — ${STAGE_KOREAN_NAMES.forming}`,
+    )
+  })
+
+  it('useId 사용 — 같은 instance 의 두 렌더에서 id 안정 (모듈 카운터가 아님을 검증)', () => {
+    const { container, rerender } = render(
+      <LivingOrb
+        stage="forming"
+        opacity={0.6}
+        hue="rgb(107,171,154)"
+        saturation={0.5}
+        motion={0.5}
+      />,
+    )
+    const fillBefore = container.querySelector('circle')?.getAttribute('fill')
+    rerender(
+      <LivingOrb
+        stage="forming"
+        opacity={0.6}
+        hue="rgb(107,171,154)"
+        saturation={0.5}
+        motion={0.5}
+      />,
+    )
+    const fillAfter = container.querySelector('circle')?.getAttribute('fill')
+    expect(fillAfter).toBe(fillBefore)
+  })
+
+  it('variant="primary" + stage="empty" → aria-label 에 "비어있음" 노출', () => {
+    const { container } = render(
+      <LivingOrb
+        stage="empty"
+        opacity={0.15}
+        hue="rgb(107,171,154)"
+        saturation={0.3}
+        motion={0.3}
+        variant="primary"
+      />,
+    )
+    expect(container.querySelector('svg')?.getAttribute('aria-label')).toBe(
+      '감정 오브 — 비어있음',
+    )
   })
 })

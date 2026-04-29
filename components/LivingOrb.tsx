@@ -1,6 +1,9 @@
+// components/LivingOrb.tsx
 'use client'
 
-import type { OrbStage } from '@/lib/orbStages'
+import { useId } from 'react'
+import { type OrbStage } from '@/lib/orbStages'
+import { STAGE_KOREAN_NAMES } from '@/lib/stageLabels'
 
 interface Props {
   stage: OrbStage
@@ -10,6 +13,7 @@ interface Props {
   motion: number
   size?: number
   className?: string
+  variant?: 'decoration' | 'primary'
 }
 
 const STAGE_BLUR_PX: Record<OrbStage, number> = {
@@ -20,8 +24,6 @@ const STAGE_BLUR_PX: Record<OrbStage, number> = {
   living: 0,
 }
 
-let idCounter = 0
-
 export default function LivingOrb({
   stage,
   opacity,
@@ -30,12 +32,14 @@ export default function LivingOrb({
   motion,
   size = 56,
   className,
+  variant = 'decoration',
 }: Props) {
-  const uid = `lo-${++idCounter}`
+  const reactId = useId()
+  // useId() 는 ":r0:" 같은 콜론 포함 형식 → SVG attribute 에 안전하지만 가독성 위해 sanitize.
+  const uid = `lo-${reactId.replace(/:/g, '')}`
   const filterId = `${uid}-blur`
   const gradientId = `${uid}-grad`
 
-  // motion 0.3~1 → breathe duration 5.2s ~ 2.5s
   const breathDuration = (5.2 - 2.7 * Math.max(0, Math.min(1, motion))).toFixed(2)
   const innerOpacity = 0.6 + 0.4 * Math.max(0, Math.min(1, saturation))
   const ringOpacity = 0.15 + 0.45 * Math.max(0, Math.min(1, saturation))
@@ -46,11 +50,22 @@ export default function LivingOrb({
       ? 'none'
       : `orbBreathe ${breathDuration}s ease-in-out infinite`
 
+  const a11yProps =
+    variant === 'primary'
+      ? {
+          role: 'img' as const,
+          'aria-label': `감정 오브 — ${STAGE_KOREAN_NAMES[stage]}`,
+        }
+      : {
+          role: 'presentation' as const,
+          'aria-hidden': true,
+        }
+
   return (
     <svg
-      role="img"
+      {...a11yProps}
       data-orb={stage}
-      aria-label={`Living Orb ${stage}`}
+      data-variant={variant}
       width={size}
       height={size}
       viewBox="0 0 100 100"
