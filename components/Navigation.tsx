@@ -21,6 +21,7 @@ export default function Navigation() {
               <Link
                 key={tab.href}
                 href={tab.href}
+                aria-current={active ? 'page' : undefined}
                 className={`flex-1 py-4 text-center text-[12px] font-light uppercase tracking-[0.16em] transition-colors ${
                   active
                     ? 'border-b border-[var(--accent)] text-[var(--fg)]'

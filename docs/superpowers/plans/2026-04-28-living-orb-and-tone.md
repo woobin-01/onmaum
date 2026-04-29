@@ -2359,6 +2359,7 @@ export default function Navigation() {
               <Link
                 key={tab.href}
                 href={tab.href}
+                aria-current={active ? 'page' : undefined}
                 className={`flex-1 py-4 text-center text-[12px] font-light uppercase tracking-[0.16em] transition-colors ${
                   active
                     ? 'border-b border-[var(--accent)] text-[var(--fg)]'
@@ -2398,7 +2399,7 @@ const NAV_LINKS = [
 ] as const
 
 interface Props {
-  /** 랜딩이 강제 다크인지 여부. 기본 false (테마 따름) */
+  /** 랜딩이 강제 다크인지 여부. 기본 true (랜딩의 다크 정체성 유지). false 면 globalThemeProvider 의 data-theme 따름 */
   forceDark?: boolean
 }
 
@@ -2450,7 +2451,9 @@ export default function LandingNav({ forceDark = true }: Props) {
           <a
             key={link.href}
             href={link.href}
-            className="transition-colors hover:text-[#F0EDE6]"
+            className={`transition-colors ${
+              forceDark ? 'hover:text-[#F0EDE6]' : 'hover:text-[var(--fg)]'
+            }`}
           >
             {link.label}
           </a>
