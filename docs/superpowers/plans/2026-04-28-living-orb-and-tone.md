@@ -1461,6 +1461,10 @@ git commit -m "feat: useLivingOrb — DB+axes 조합 + idle/inactive2w/error fal
 
 ## Task 9: `components/LivingOrb.tsx` (SVG, TDD)
 
+> **2026-04-29 갱신**: `variant` prop·`useId()`·role/aria-hidden 분기는 새 plan
+> `docs/superpowers/plans/2026-04-29-stage-label-system.md` Task 4 에서 처리.
+> 이 Task 9 spec 의 모듈-레벨 `idCounter` 와 영어 `aria-label` 은 폐기.
+
 **Files:**
 - Create: `components/LivingOrb.tsx`
 - Create: `tests/components/LivingOrb.test.tsx`
@@ -1685,6 +1689,10 @@ git commit -m "feat: LivingOrb SVG 컴포넌트 — 5단계 시각 + 4축 props 
 
 ## Task 10: `LivingOrbProvider` + `LivingOrbHost` (Context + 우상단 호스트)
 
+> **2026-04-29 갱신**: `LivingOrbHost` 의 StageLabel 통합·inline-flex 배치는
+> 새 plan `docs/superpowers/plans/2026-04-29-stage-label-system.md` Task 5 에서
+> 처리. Provider 자체는 이 Task 10 spec 그대로 사용 (단, value 객체 useMemo 추가됨).
+
 **Files:**
 - Create: `components/LivingOrbProvider.tsx`
 - Create: `components/LivingOrbHost.tsx`
@@ -1782,6 +1790,12 @@ git commit -m "feat: LivingOrbProvider + LivingOrbHost — 우상단 fixed 호�
 ---
 
 ## Task 11: `hooks/useMilestone.ts` (TDD)
+
+> **2026-04-29 폐기**: 시스템 푸시 알림이 "위장 모드" 컨셉과 충돌한다는 판단으로
+> `useMilestone` + `MilestoneToast` 시스템은 폐기. 기능은 새 plan
+> `docs/superpowers/plans/2026-04-29-stage-label-system.md` 의 `useStageLabel` +
+> `StageLabel` 로 대체. localStorage 키 `onmaum_orb_stage_max` 와 `isStageHigher`
+> 로직만 새 시스템에 흡수됨. 이 Task 11 은 구현하지 않는다.
 
 **Files:**
 - Create: `hooks/useMilestone.ts`
@@ -1909,6 +1923,10 @@ git commit -m "feat: useMilestone hook — stage 상승 감지 + localStorage TD
 ---
 
 ## Task 12: `components/MilestoneToast.tsx` (TDD)
+
+> **2026-04-29 폐기**: Task 11 폐기와 동일 사유. 토스트 5초 표시 + 시스템 푸시
+> 옵트인은 `StageLabel` (3.6초 인라인 라벨, 푸시 영구 제외) 로 대체. 이 Task 12 는
+> 구현하지 않는다.
 
 **Files:**
 - Create: `components/MilestoneToast.tsx`
