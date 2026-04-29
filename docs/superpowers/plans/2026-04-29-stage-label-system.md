@@ -24,7 +24,7 @@
 | `lib/stageLabels.ts` | `STAGE_LABEL_MESSAGES` (4개), `STAGE_KOREAN_NAMES` (5개), `getStageLabelMessage` | 신규 |
 | `hooks/useStageLabel.ts` | stage 상승 감지 + visible 타이머 + localStorage | 신규 |
 | `components/StageLabel.tsx` | role/aria-live + data-visible 속성 (CSS가 페이드 처리) | 신규 |
-| `app/globals.css` | `.stage-label` 페이드 transition + reduced-motion | 수정 |
+| `components/StageLabel.css` | `.stage-label` 페이드 transition + reduced-motion (컴포넌트 전용) | 신규 |
 | `components/LivingOrb.tsx` | `variant` prop + `useId()` + role/aria 분기 | 수정 |
 | `components/LivingOrbHost.tsx` | StageLabel + LivingOrb inline-flex 배치 | 수정 |
 | `tests/lib/stageLabels.test.ts` | 메시지 매핑 단위 | 신규 |
@@ -367,12 +367,14 @@ git commit -m "feat: useStageLabel — 단계 상승 감지 + 3초 visible 타�
 
 ---
 
-## Task 3: `components/StageLabel.tsx` + globals.css 페이드 (TDD)
+## Task 3: `components/StageLabel.tsx` + 컴포넌트 전용 CSS (TDD)
 
 **Files:**
 - Create: `components/StageLabel.tsx`
+- Create: `components/StageLabel.css`
 - Create: `tests/components/StageLabel.test.tsx`
-- Modify: `app/globals.css` (페이드 keyframes 추가)
+
+> **2026-04-29 갱신**: CSS는 `app/globals.css` 가 아니라 `components/StageLabel.css` 컴포넌트 전용 파일에 둔다. 이유: 기존 `app/globals.css` 가 다른 plan(Task 4)의 미커밋 변경을 안고 있어, 이번 commit에 그 변경이 흡수되는 걸 피하기 위함. StageLabel.tsx 가 직접 `import './StageLabel.css'` 한다 — Next.js 16 의 컴포넌트 레벨 CSS import 패턴.
 
 - [ ] **Step 1: 실패 테스트 작성**
 
@@ -442,6 +444,8 @@ Expected: `Failed to resolve import "@/components/StageLabel"`.
 // components/StageLabel.tsx
 'use client'
 
+import './StageLabel.css'
+
 interface Props {
   visible: boolean
   message: string | null
@@ -464,9 +468,7 @@ export default function StageLabel({ visible, message, className }: Props) {
 }
 ```
 
-- [ ] **Step 4: globals.css 페이드 추가**
-
-`app/globals.css` 파일 끝에 다음 블록 추가:
+- [ ] **Step 4: `components/StageLabel.css` 작성**
 
 ```css
 /* StageLabel — 단계 라벨 일시 표시 페이드 */
@@ -513,8 +515,8 @@ Expected: 출력 없음.
 - [ ] **Step 7: 커밋**
 
 ```bash
-git add components/StageLabel.tsx tests/components/StageLabel.test.tsx app/globals.css
-git commit -m "feat: StageLabel + globals.css 페이드 transition (300/600 + reduced-motion) TDD"
+git add components/StageLabel.tsx components/StageLabel.css tests/components/StageLabel.test.tsx
+git commit -m "feat: StageLabel + 컴포넌트 전용 CSS 페이드 (300/600 + reduced-motion) TDD"
 ```
 
 ---

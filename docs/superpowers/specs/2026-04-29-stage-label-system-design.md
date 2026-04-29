@@ -199,7 +199,7 @@ export default function LivingOrbHost() {
 
 ## 8. CSS
 
-`app/globals.css`에 페이드 keyframes 추가:
+`components/StageLabel.css` (컴포넌트 전용) — `app/globals.css`가 다른 plan(Task 4)의 미커밋 변경을 안고 있어, 이번 시스템의 CSS는 컴포넌트 레벨로 분리. `StageLabel.tsx`가 직접 `import './StageLabel.css'`. 페이드 keyframes:
 
 ```css
 .stage-label {
