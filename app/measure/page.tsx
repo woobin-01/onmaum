@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import CameraView from '@/components/CameraView'
 import EmotionDisplay from '@/components/EmotionDisplay'
 import Onboarding from '@/components/Onboarding'
+import { useLivingOrbInput } from '@/components/LivingOrbProvider'
 import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
 import { loadFaceApiModels } from '@/lib/emotionAnalysis'
 import { db } from '@/lib/db'
@@ -69,6 +70,14 @@ export default function Home() {
     active,
     videoEl,
   })
+
+  const { setLive } = useLivingOrbInput()
+
+  useEffect(() => {
+    // 측정 중일 때만 live emotion 을 Provider 에 전달.
+    // 정지 시 setLive(null, false) 로 reset → orb 가 weekly aggregate 기반 hue 로 복귀.
+    setLive(active ? currentEmotion : null, active)
+  }, [setLive, active, currentEmotion])
 
   const handleOnboardingDone = useCallback(() => {
     try {

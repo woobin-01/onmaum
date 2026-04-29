@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import AppChrome from "@/components/AppChrome";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import { LivingOrbProvider } from "@/components/LivingOrbProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,7 +33,9 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-ink-50">
-        <AppChrome>{children}</AppChrome>
+        <LivingOrbProvider>
+          <AppChrome>{children}</AppChrome>
+        </LivingOrbProvider>
         <ServiceWorkerRegistrar />
       </body>
     </html>

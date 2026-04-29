@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import ContactsFooter from '@/components/ContactsFooter'
+import LivingOrbHost from '@/components/LivingOrbHost'
 import Navigation from '@/components/Navigation'
 
 interface Props {
@@ -22,6 +23,7 @@ export default function AppChrome({ children }: Props) {
       <Navigation />
       <div className="flex-1">{children}</div>
       <ContactsFooter />
+      <LivingOrbHost />
     </>
   )
 }
