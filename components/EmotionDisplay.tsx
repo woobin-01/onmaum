@@ -1,3 +1,4 @@
+// components/EmotionDisplay.tsx
 'use client'
 
 import {
@@ -8,18 +9,11 @@ import {
   type EmotionResult,
 } from '@/lib/emotionAnalysis'
 
-const TEXT_COLOR: Record<Emotion, string> = {
-  happy: 'text-risk-good',
-  calm: 'text-ink-700',
-  sad: 'text-risk-caution',
-  angry: 'text-risk-warning',
-}
-
-const BAR_COLOR: Record<Emotion, string> = {
-  happy: 'bg-risk-good',
-  calm: 'bg-ink-500',
-  sad: 'bg-risk-caution',
-  angry: 'bg-risk-warning',
+const EMOTION_COLOR: Record<Emotion, string> = {
+  happy: 'var(--accent)',
+  calm: 'var(--fg)',
+  sad: 'var(--caution)',
+  angry: 'var(--warning)',
 }
 
 interface Props {
@@ -29,7 +23,7 @@ interface Props {
 export default function EmotionDisplay({ emotion }: Props) {
   if (!emotion) {
     return (
-      <div className="rounded-2xl border border-ink-200 bg-white p-6 text-center text-sm text-ink-500">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] p-6 text-center text-[12px] font-light text-[var(--fg-muted)]">
         얼굴이 감지되지 않습니다
       </div>
     )
@@ -39,13 +33,18 @@ export default function EmotionDisplay({ emotion }: Props) {
   const dominantPercent = Math.round(emotion[dominant] * 100)
 
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-6">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] p-6">
       <div className="text-center">
-        <p className="text-sm text-ink-500">현재 감정</p>
-        <p className={`mt-2 text-4xl font-bold ${TEXT_COLOR[dominant]}`}>
+        <p className="text-[11px] font-light uppercase tracking-[0.18em] text-[var(--fg-muted)]">
+          현재 감정
+        </p>
+        <p
+          className="mt-2 text-4xl font-thin tracking-[-0.02em]"
+          style={{ color: EMOTION_COLOR[dominant] }}
+        >
           {EMOTION_LABELS[dominant]}
         </p>
-        <p className="mt-1 text-sm text-ink-500 tabular-nums">
+        <p className="mt-1 text-[12px] font-light text-[var(--fg-muted)] tabular-nums">
           {dominantPercent}%
         </p>
       </div>
@@ -55,14 +54,17 @@ export default function EmotionDisplay({ emotion }: Props) {
           const percent = Math.round(emotion[key] * 100)
           return (
             <div key={key}>
-              <div className="flex items-center justify-between text-xs text-ink-600">
+              <div className="flex items-center justify-between text-[11px] font-light text-[var(--fg-muted)]">
                 <span>{EMOTION_LABELS[key]}</span>
                 <span className="tabular-nums">{percent}%</span>
               </div>
-              <div className="mt-1 h-2 overflow-hidden rounded-full bg-ink-100">
+              <div className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--bg-tint)]">
                 <div
-                  className={`h-full transition-[width] duration-300 ${BAR_COLOR[key]}`}
-                  style={{ width: `${percent}%` }}
+                  className="h-full transition-[width] duration-300"
+                  style={{
+                    width: `${percent}%`,
+                    background: EMOTION_COLOR[key],
+                  }}
                 />
               </div>
             </div>

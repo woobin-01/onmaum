@@ -108,21 +108,21 @@ function ChartTooltip({
   if (!active || !payload || payload.length === 0) return null
   const p = payload[0].payload
   return (
-    <div className="rounded-lg border border-ink-200 bg-white px-3 py-2 text-xs shadow-sm">
-      <p className="font-medium text-ink-900">{p.label}</p>
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-elev)] px-3 py-2 text-xs shadow-sm">
+      <p className="font-light text-[var(--fg)]">{p.label}</p>
       {p.hasData && p.riskLevel ? (
         <>
-          <p className="mt-1 text-ink-600">
-            상태: <span className="font-medium">{RISK_LABEL[p.riskLevel]}</span>
+          <p className="mt-1 text-[var(--fg-muted)]">
+            상태: <span className="font-light">{RISK_LABEL[p.riskLevel]}</span>
           </p>
-          <p className="text-ink-500">
+          <p className="text-[var(--fg-muted)]">
             부정 {Math.round(p.negativeRatio * 100)}% · 평탄{' '}
             {p.flatAffectAvg.toFixed(2)}
           </p>
-          <p className="text-ink-400">기록 {p.recordCount}개</p>
+          <p className="text-[var(--fg-faint)]">기록 {p.recordCount}개</p>
         </>
       ) : (
-        <p className="mt-1 text-ink-400">데이터 없음</p>
+        <p className="mt-1 text-[var(--fg-faint)]">데이터 없음</p>
       )}
     </div>
   )
@@ -141,7 +141,7 @@ export default function TrendChart() {
 
   if (records === undefined) {
     return (
-      <div className="rounded-2xl border border-ink-200 bg-white p-6 text-center text-sm text-ink-500">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] p-6 text-center text-sm text-[var(--fg-muted)]">
         ⏳ 추세 불러오는 중...
       </div>
     )
@@ -151,14 +151,14 @@ export default function TrendChart() {
   const hasAnyData = data.some((d) => d.hasData)
 
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-6">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] p-6">
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm font-medium text-ink-700">최근 7일 추세</p>
-        <p className="text-xs text-ink-500">부정 비율 (%)</p>
+        <p className="text-sm font-light text-[var(--fg)]">최근 7일 추세</p>
+        <p className="text-xs text-[var(--fg-muted)]">부정 비율 (%)</p>
       </div>
 
       {!hasAnyData && (
-        <p className="mb-3 text-center text-xs text-ink-400">
+        <p className="mb-3 text-center text-xs text-[var(--fg-faint)]">
           7일 내 집계 데이터가 없습니다
         </p>
       )}
