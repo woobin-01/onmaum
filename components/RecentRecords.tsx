@@ -40,7 +40,7 @@ export default function RecentRecords() {
   if (records === undefined || totalCount === undefined) {
     return (
       <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] p-6 text-center text-sm text-[var(--fg-muted)]">
-        ⏳ 기록 불러오는 중...
+        기록 불러오는 중...
       </div>
     )
   }
@@ -63,7 +63,7 @@ export default function RecentRecords() {
         {records.map((r) => (
           <li
             key={r.id}
-            className="flex items-center justify-between gap-3 rounded-lg bg-ink-50 px-3 py-2 text-sm text-[var(--fg)]"
+            className="flex items-center justify-between gap-3 rounded-lg bg-[var(--bg-tint)] px-3 py-2 text-sm text-[var(--fg)]"
           >
             <div className="flex items-center gap-2">
               <span
@@ -72,14 +72,14 @@ export default function RecentRecords() {
               <span className="tabular-nums text-[var(--fg)]">
                 {formatTime(r.timestamp)}
               </span>
-              <span className="font-light">
+              <span className="font-light tabular-nums">
                 {EMOTION_LABELS[r.dominantEmotion]}{' '}
                 {formatPercent(r[r.dominantEmotion])}
               </span>
             </div>
             <div className="flex items-center gap-3 text-xs text-[var(--fg-muted)]">
-              <span>{formatDuration(r.duration)}</span>
-              <span>평탄 {r.flatAffectScore.toFixed(2)}</span>
+              <span className="tabular-nums">{formatDuration(r.duration)}</span>
+              <span className="tabular-nums">평탄 {r.flatAffectScore.toFixed(2)}</span>
             </div>
           </li>
         ))}

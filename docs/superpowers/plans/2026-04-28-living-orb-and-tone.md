@@ -2817,6 +2817,11 @@ export default function EmotionDisplay({ emotion }: Props) {
 
 각 파일을 Read → Edit 으로 변경.
 
+> **2026-04-30 보강**: 매핑 표에 정확히 없는 케이스도 다크 모드 깨짐 방지를 위해 적절히 처리:
+> - 정적 ink 색 (예: `bg-ink-50`) → `bg-[var(--bg-tint)]` (다크에서 흰색으로 깨짐)
+> - recharts 의 hex props (`stroke`, `fill`, `cursor.fill`) → `var(--...)` 문자열 직접 전달. SVG attribute 는 native CSS var resolve 하므로 추가 JS bridge 불필요.
+> - `tabular-nums` 는 실시간 업데이트되는 숫자 표시 모두에 일관 적용 (시간/퍼센트/점수).
+
 - [ ] **Step 3: 회귀 테스트**
 
 ```bash

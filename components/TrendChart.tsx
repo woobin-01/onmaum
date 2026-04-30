@@ -34,7 +34,8 @@ const RISK_LABEL: Record<RiskLevel, string> = {
   warning: '위험',
 }
 
-const EMPTY_HEX = '#E5E5E5' // ink-200
+// SVG attribute 는 var() native resolve 하므로 CSS var 문자열 직접 전달 가능 (recharts 가 SVG 로 통과시킴).
+const EMPTY_FILL = 'var(--border)'
 
 interface ChartPoint {
   date: string // 2026-04-26
@@ -169,29 +170,29 @@ export default function TrendChart() {
             data={data}
             margin={{ top: 8, right: 8, bottom: 0, left: -16 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F5" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 11, fill: '#737373' }}
-              axisLine={{ stroke: '#E5E5E5' }}
+              tick={{ fontSize: 11, fill: 'var(--fg-muted)' }}
+              axisLine={{ stroke: 'var(--border)' }}
               tickLine={false}
             />
             <YAxis
               domain={[0, 1]}
               tickFormatter={(v: number) => `${Math.round(v * 100)}`}
-              tick={{ fontSize: 11, fill: '#737373' }}
-              axisLine={{ stroke: '#E5E5E5' }}
+              tick={{ fontSize: 11, fill: 'var(--fg-muted)' }}
+              axisLine={{ stroke: 'var(--border)' }}
               tickLine={false}
             />
             <Tooltip
               content={<ChartTooltip />}
-              cursor={{ fill: '#FAFAFA' }}
+              cursor={{ fill: 'var(--bg-tint)' }}
             />
             <Bar dataKey="negativeRatio" radius={[4, 4, 0, 0]}>
               {data.map((d, idx) => (
                 <Cell
                   key={d.date}
-                  fill={d.hasData && d.riskLevel ? RISK_HEX[d.riskLevel] : EMPTY_HEX}
+                  fill={d.hasData && d.riskLevel ? RISK_HEX[d.riskLevel] : EMPTY_FILL}
                   data-index={idx}
                 />
               ))}
