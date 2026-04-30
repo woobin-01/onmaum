@@ -2583,12 +2583,12 @@ useEffect(() => {
 }, [setLive])
 ```
 
-(d) JSX 헤더 변경:
+(d) JSX 헤더 변경 — 라벨은 Navigation 탭 텍스트(`— 측정`)와 collision 피하기 위해 동반자 톤 카피로:
 
 ```tsx
 <header className="text-center">
   <p className="mb-2 text-[10px] font-light uppercase tracking-[0.2em] text-[var(--accent)]">
-    — 측정
+    — 지금
   </p>
   <h1 className="text-3xl font-thin tracking-[-0.02em] text-[var(--fg)]">
     오늘의 마음 상태
@@ -2599,31 +2599,31 @@ useEffect(() => {
 </header>
 ```
 
-(e) 상태 메시지 이모지 제거:
+(e) 상태 메시지 이모지 제거 — 배경(`bg-[var(--bg-elev)]`) 도 제거. `--bg-elev` 는 elevated surface(카드) 토큰이라 contextual feedback(에러/로딩) 에 부적합. border + text 만으로 표현:
 
 ```tsx
 {modelStatus === 'loading' && (
-  <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--fg-muted)]">
+  <div className="rounded-2xl border border-[var(--border)] p-4 text-center text-[12px] font-light text-[var(--fg-muted)]">
     모델을 불러오고 있습니다
   </div>
 )}
 {modelStatus === 'error' && (
-  <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+  <div className="rounded-2xl border border-[var(--warning)]/30 p-4 text-center text-[12px] font-light text-[var(--warning)]">
     모델을 불러오지 못했습니다 — {modelError}
   </div>
 )}
 {dbError && (
-  <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+  <div className="rounded-2xl border border-[var(--warning)]/30 p-4 text-center text-[12px] font-light text-[var(--warning)]">
     데이터 저장이 어려운 환경입니다 — {dbError}
   </div>
 )}
 {cameraError && (
-  <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+  <div className="rounded-2xl border border-[var(--warning)]/30 p-4 text-center text-[12px] font-light text-[var(--warning)]">
     카메라 오류 — {cameraError}
   </div>
 )}
 {saveError && (
-  <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+  <div className="rounded-2xl border border-[var(--warning)]/30 p-4 text-center text-[12px] font-light text-[var(--warning)]">
     저장 실패 — {saveError.message}
   </div>
 )}
@@ -2666,11 +2666,11 @@ useEffect(() => {
 </header>
 ```
 
-변경 후:
+변경 후 (라벨은 Navigation 탭 `— 통계` 와 collision 피하기 위해 동반자 톤):
 ```tsx
 <header className="text-center">
   <p className="mb-2 text-[10px] font-light uppercase tracking-[0.2em] text-[var(--accent)]">
-    — 통계
+    — 지난 시간
   </p>
   <h1 className="text-3xl font-thin tracking-[-0.02em] text-[var(--fg)]">
     이번 주의 마음

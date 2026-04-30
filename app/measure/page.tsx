@@ -125,7 +125,7 @@ export default function Home() {
       <section className="mx-auto w-full max-w-md space-y-6">
         <header className="text-center">
           <p className="mb-2 text-[10px] font-light uppercase tracking-[0.2em] text-[var(--accent)]">
-            — 측정
+            — 지금
           </p>
           <h1 className="text-3xl font-thin tracking-[-0.02em] text-[var(--fg)]">
             오늘의 마음 상태
@@ -136,17 +136,17 @@ export default function Home() {
         </header>
 
         {modelStatus === 'loading' && (
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--fg-muted)]">
+          <div className="rounded-2xl border border-[var(--border)] p-4 text-center text-[12px] font-light text-[var(--fg-muted)]">
             모델을 불러오고 있습니다
           </div>
         )}
         {modelStatus === 'error' && (
-          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+          <div className="rounded-2xl border border-[var(--warning)]/30 p-4 text-center text-[12px] font-light text-[var(--warning)]">
             모델을 불러오지 못했습니다 — {modelError}
           </div>
         )}
         {dbError && (
-          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+          <div className="rounded-2xl border border-[var(--warning)]/30 p-4 text-center text-[12px] font-light text-[var(--warning)]">
             데이터 저장이 어려운 환경입니다 — {dbError}
           </div>
         )}
@@ -158,13 +158,13 @@ export default function Home() {
         />
 
         {cameraError && (
-          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+          <div className="rounded-2xl border border-[var(--warning)]/30 p-4 text-center text-[12px] font-light text-[var(--warning)]">
             카메라 오류 — {cameraError}
           </div>
         )}
 
         {saveError && (
-          <div className="rounded-2xl border border-[var(--warning)]/30 bg-[var(--bg-elev)] p-4 text-center text-[12px] font-light text-[var(--warning)]">
+          <div className="rounded-2xl border border-[var(--warning)]/30 p-4 text-center text-[12px] font-light text-[var(--warning)]">
             저장 실패 — {saveError.message}
           </div>
         )}

@@ -34,7 +34,7 @@ export default function StatsPage() {
       <section className="mx-auto w-full max-w-md space-y-6">
         <header className="text-center">
           <p className="mb-2 text-[10px] font-light uppercase tracking-[0.2em] text-[var(--accent)]">
-            — 통계
+            — 지난 시간
           </p>
           <h1 className="text-3xl font-thin tracking-[-0.02em] text-[var(--fg)]">
             이번 주의 마음
