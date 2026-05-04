@@ -9,7 +9,7 @@ interface Palette {
   mainStops: Array<[number, (lx: number, ly: number) => string]>
   chrom: string
   rim: [string, string, string]
-  glitter: (alpha: number) => string
+  glitter: (wave: number) => string // wave ∈ [-1, 1] (sin output), not opacity
 }
 
 const PALETTES: Record<Theme, Palette> = {
@@ -207,6 +207,7 @@ export default function ReactiveOrb({ className, theme = 'dark' }: Props) {
         specY,
         baseR * 0.38,
       )
+      // NOTE: specular는 의도적으로 theme-independent (흰빛 reflection은 light/dark 공통 디자인 언어). Task 20 시각 QA에서 light variant 위에서 별도 검증.
       specG.addColorStop(0, 'rgba(255,255,255,0.72)')
       specG.addColorStop(0.25, 'rgba(255,255,255,0.28)')
       specG.addColorStop(0.6, 'rgba(255,255,255,0.05)')
