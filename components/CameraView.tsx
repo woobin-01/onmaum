@@ -55,7 +55,7 @@ export default function CameraView({ active, onReady, onError }: Props) {
   }, [active])
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-ink-200 bg-ink-100">
+    <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elev)]">
       <video
         ref={videoRef}
         muted
@@ -64,7 +64,7 @@ export default function CameraView({ active, onReady, onError }: Props) {
       />
       {!active && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <p className="text-sm text-ink-500">측정을 시작하면 카메라가 켜집니다</p>
+          <p className="text-[12px] font-light text-[var(--fg-muted)]">측정을 시작하면 카메라가 켜집니다</p>
         </div>
       )}
     </div>
