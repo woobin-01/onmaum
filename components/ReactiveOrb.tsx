@@ -2,8 +2,50 @@
 
 import { useEffect, useRef } from 'react'
 
+type Theme = 'light' | 'dark'
+
+interface Palette {
+  bgGlow: [string, string, string] // [inner, mid, outer]
+  mainStops: Array<[number, (lx: number, ly: number) => string]>
+  chrom: string
+  rim: [string, string, string]
+  glitter: (alpha: number) => string
+}
+
+const PALETTES: Record<Theme, Palette> = {
+  dark: {
+    bgGlow: ['rgba(107,171,154,0.09)', 'rgba(80,140,120,0.04)', 'transparent'],
+    mainStops: [
+      [0, (lx) => `rgba(${180 + lx * 30},${220 + lx * 20},210,0.92)`],
+      [0.15, (lx) => `rgba(${140 + lx * 20},${190 + lx * 10},175,0.85)`],
+      [0.35, (lx) => `rgba(${80 + lx * 15},${140 + lx * 8},128,0.78)`],
+      [0.6, () => 'rgba(30,58,52,0.88)'],
+      [0.82, () => 'rgba(10,22,18,0.94)'],
+      [1, () => 'rgba(4,8,6,0.98)'],
+    ],
+    chrom: 'rgba(107,200,160,0.06)',
+    rim: ['transparent', 'rgba(107,171,154,0.08)', 'rgba(107,171,154,0.22)'],
+    glitter: (a) => `rgba(255,255,255,${0.12 + 0.1 * a})`,
+  },
+  light: {
+    bgGlow: ['rgba(107,171,154,0.16)', 'rgba(80,140,120,0.08)', 'transparent'],
+    mainStops: [
+      [0, (lx) => `rgba(${250 - lx * 5},${252 - lx * 3},250,0.95)`],
+      [0.15, (lx) => `rgba(${220 - lx * 8},${235 - lx * 6},225,0.88)`],
+      [0.35, (lx) => `rgba(${170 + lx * 10},${210 + lx * 8},195,0.78)`],
+      [0.6, () => 'rgba(130,180,165,0.55)'],
+      [0.82, () => 'rgba(107,171,154,0.28)'],
+      [1, () => 'rgba(107,171,154,0.05)'],
+    ],
+    chrom: 'rgba(80,140,120,0.05)',
+    rim: ['transparent', 'rgba(80,140,120,0.1)', 'rgba(80,140,120,0.28)'],
+    glitter: (a) => `rgba(80,140,120,${0.18 + 0.12 * a})`,
+  },
+}
+
 interface Props {
   className?: string
+  theme?: Theme
 }
 
 const N = 8
@@ -16,7 +58,7 @@ function clamp(v: number, mn: number, mx: number): number {
   return Math.max(mn, Math.min(mx, v))
 }
 
-export default function ReactiveOrb({ className }: Props) {
+export default function ReactiveOrb({ className, theme = 'dark' }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -24,6 +66,8 @@ export default function ReactiveOrb({ className }: Props) {
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+
+    const palette = PALETTES[theme]
 
     // 부모 기준 마우스 좌표 (canvas 내부 좌표계와 일치)
     function initialMousePos() {
@@ -92,9 +136,9 @@ export default function ReactiveOrb({ className }: Props) {
 
       // 배경 글로우
       const bgG = ctx.createRadialGradient(cx, cy, 0, cx, cy, baseR * 2.2)
-      bgG.addColorStop(0, 'rgba(107,171,154,0.09)')
-      bgG.addColorStop(0.4, 'rgba(80,140,120,0.04)')
-      bgG.addColorStop(1, 'transparent')
+      bgG.addColorStop(0, palette.bgGlow[0])
+      bgG.addColorStop(0.4, palette.bgGlow[1])
+      bgG.addColorStop(1, palette.bgGlow[2])
       ctx.beginPath()
       ctx.arc(cx, cy, baseR * 2.2, 0, Math.PI * 2)
       ctx.fillStyle = bgG
@@ -131,15 +175,9 @@ export default function ReactiveOrb({ className }: Props) {
         cy + ly * baseR * 0.05,
         baseR * 1.05,
       )
-      mainG.addColorStop(0, `rgba(${180 + lx * 30},${220 + lx * 20},210,0.92)`)
-      mainG.addColorStop(
-        0.15,
-        `rgba(${140 + lx * 20},${190 + lx * 10},175,0.85)`,
-      )
-      mainG.addColorStop(0.35, `rgba(${80 + lx * 15},${140 + lx * 8},128,0.78)`)
-      mainG.addColorStop(0.6, 'rgba(30,58,52,0.88)')
-      mainG.addColorStop(0.82, 'rgba(10,22,18,0.94)')
-      mainG.addColorStop(1, 'rgba(4,8,6,0.98)')
+      for (const [offset, fn] of palette.mainStops) {
+        mainG.addColorStop(offset, fn(lx, ly))
+      }
       ctx.fillStyle = mainG
       ctx.fill()
 
@@ -148,7 +186,7 @@ export default function ReactiveOrb({ className }: Props) {
       ctx.translate(2, -1)
       drawBlobPath()
       const chromG = ctx.createRadialGradient(lightX, lightY, 0, cx, cy, baseR)
-      chromG.addColorStop(0, 'rgba(107,200,160,0.06)')
+      chromG.addColorStop(0, palette.chrom)
       chromG.addColorStop(1, 'transparent')
       ctx.fillStyle = chromG
       ctx.fill()
@@ -186,9 +224,9 @@ export default function ReactiveOrb({ className }: Props) {
         rimY,
         baseR * 1.02,
       )
-      rimG.addColorStop(0, 'transparent')
-      rimG.addColorStop(0.7, 'rgba(107,171,154,0.08)')
-      rimG.addColorStop(1, 'rgba(107,171,154,0.22)')
+      rimG.addColorStop(0, palette.rim[0])
+      rimG.addColorStop(0.7, palette.rim[1])
+      rimG.addColorStop(1, palette.rim[2])
       ctx.fillStyle = rimG
       ctx.fill()
       ctx.restore()
@@ -202,7 +240,7 @@ export default function ReactiveOrb({ className }: Props) {
         const size = 1.5 + Math.sin(t * 2 + i) * 0.8
         ctx.beginPath()
         ctx.arc(gx, gy, size, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(255,255,255,${0.12 + 0.1 * Math.sin(t * 3 + i)})`
+        ctx.fillStyle = palette.glitter(Math.sin(t * 3 + i))
         ctx.fill()
       }
     }
@@ -243,7 +281,7 @@ export default function ReactiveOrb({ className }: Props) {
       window.removeEventListener('resize', resize)
       document.removeEventListener('mousemove', handleMouse)
     }
-  }, [])
+  }, [theme])
 
   return (
     <canvas
