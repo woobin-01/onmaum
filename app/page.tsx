@@ -71,9 +71,8 @@ export default function Home() {
   //   const { stressScore, stressLevel } = useCurrentStressState(currentEmotion)
   //   const stressState = getStressStateFromEmotion(currentEmotion)
   // 빌드가 깨지지 않도록 우선 null로 둔다.
-  const stressState: StressState | null = null
-  const stressScore = stressState?.stressScore ?? null
-  const stressLevel = stressState?.stressLevel ?? null
+  const stressScore: StressState['stressScore'] = null
+  const stressLevel: StressState['stressLevel'] = null
 
   // TODO: 스트레스 판별 담당자가 세션 요약(StressSessionSummary)을 계산해 연결할 예정.
   // 계산 로직은 이 파일에서 만들지 않는다.

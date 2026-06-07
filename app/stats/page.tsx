@@ -33,11 +33,12 @@ export default function StatsPage() {
 
   // TODO: 스트레스 판별 담당자가 일별 stressScore/stressLevel 집계를 제공하면 연결 예정.
   // 점수 계산은 이 페이지에서 하지 않는다.
-  const dailyStressState: StressState | null = null
+  const dailyStressScore: StressState['stressScore'] = null
+  const dailyStressLevel: StressState['stressLevel'] = null
   useDailyStressNotification({
     date: today,
-    stressScore: dailyStressState?.stressScore ?? null,
-    stressLevel: dailyStressState?.stressLevel ?? null,
+    stressScore: dailyStressScore,
+    stressLevel: dailyStressLevel,
     permission,
   })
 
