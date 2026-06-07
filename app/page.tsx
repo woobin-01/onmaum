@@ -3,9 +3,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import CameraView from '@/components/CameraView'
 import EmotionDisplay from '@/components/EmotionDisplay'
+import RiskWarningModal from '@/components/RiskWarningModal'
+import SessionStressSummary from '@/components/SessionStressSummary'
+import StressAlertBanner from '@/components/StressAlertBanner'
+import StressAlertOrb from '@/components/StressAlertOrb'
 import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
+import { useNotificationPermission } from '@/hooks/useNotificationPermission'
+import { useStressAlert } from '@/hooks/useStressAlert'
 import { loadFaceApiModels } from '@/lib/emotionAnalysis'
 import { db } from '@/lib/db'
+import type { StressSessionSummary as StressSessionSummaryType, StressState } from '@/lib/stressTypes'
 
 type ModelStatus = 'loading' | 'ready' | 'error'
 
@@ -17,6 +24,8 @@ export default function Home() {
   const [active, setActive] = useState(false)
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [showSessionSummary, setShowSessionSummary] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -57,6 +66,39 @@ export default function Home() {
     videoEl,
   })
 
+  // TODO: 스트레스 판별 담당자 구현 연결 예정.
+  // 아래 둘 중 하나가 준비되면 연결한다.
+  //   const { stressScore, stressLevel } = useCurrentStressState(currentEmotion)
+  //   const stressState = getStressStateFromEmotion(currentEmotion)
+  // 빌드가 깨지지 않도록 우선 null로 둔다.
+  const stressState: StressState | null = null
+  const stressScore = stressState?.stressScore ?? null
+  const stressLevel = stressState?.stressLevel ?? null
+
+  // TODO: 스트레스 판별 담당자가 세션 요약(StressSessionSummary)을 계산해 연결할 예정.
+  // 계산 로직은 이 파일에서 만들지 않는다.
+  const sessionSummary: StressSessionSummaryType | null = null
+
+  const { permission } = useNotificationPermission()
+
+  const {
+    alertLevel,
+    alertTitle,
+    alertMessage,
+    recommendation,
+    shouldShowOrbBubble,
+    shouldShowBanner,
+    shouldShowModal,
+    dismissAlert,
+  } = useStressAlert({
+    active,
+    sessionId,
+    stressScore,
+    stressLevel,
+    permission,
+    mode: 'realtime',
+  })
+
   const handleCameraReady = useCallback((video: HTMLVideoElement) => {
     setVideoEl(video)
     setCameraError(null)
@@ -71,12 +113,20 @@ export default function Home() {
   const handleStart = () => {
     if (modelStatus !== 'ready' || !dbReady) return
     setCameraError(null)
+    setShowSessionSummary(false)
+    setSessionId(`session-${Date.now()}`)
     setActive(true)
   }
 
   const handleStop = () => {
     setActive(false)
     setVideoEl(null)
+    setShowSessionSummary(true)
+  }
+
+  const handleCloseSummary = () => {
+    setShowSessionSummary(false)
+    setSessionId(null)
   }
 
   const startDisabled = active || modelStatus !== 'ready' || !dbReady
@@ -142,8 +192,48 @@ export default function Home() {
           </button>
         </div>
 
+        <p className="text-center text-xs text-ink-400">
+          발표 시연에서는 측정 시작을 통화 시작 상황으로 가정합니다.
+          <br />
+          측정을 종료하면 이번 세션의 피드백을 확인할 수 있습니다.
+        </p>
+
         {active && <EmotionDisplay emotion={currentEmotion} />}
+
+        {active && shouldShowBanner && (
+          <StressAlertBanner
+            open={shouldShowBanner}
+            level={alertLevel}
+            title={alertTitle}
+            message={alertMessage}
+            recommendation={recommendation}
+            onClose={dismissAlert}
+          />
+        )}
+
+        {showSessionSummary && (
+          <SessionStressSummary summary={sessionSummary} onClose={handleCloseSummary} />
+        )}
       </section>
+
+      {active && (
+        <StressAlertOrb
+          stressScore={stressScore}
+          stressLevel={stressLevel}
+          bubbleMessage={alertMessage}
+          showBubble={shouldShowOrbBubble}
+        />
+      )}
+
+      <RiskWarningModal
+        open={active && shouldShowModal}
+        onClose={dismissAlert}
+        stressScore={stressScore}
+        title={alertTitle ?? undefined}
+        message={alertMessage ?? undefined}
+        recommendation={recommendation ?? undefined}
+        mode="realtime"
+      />
     </main>
   )
 }

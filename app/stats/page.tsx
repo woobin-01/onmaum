@@ -7,11 +7,13 @@ import RecentRecords from '@/components/RecentRecords'
 import RiskWarningModal from '@/components/RiskWarningModal'
 import SelfCareTip from '@/components/SelfCareTip'
 import TrendChart from '@/components/TrendChart'
+import { useDailyStressNotification } from '@/hooks/useDailyStressNotification'
 import { useNotificationPermission } from '@/hooks/useNotificationPermission'
 import { useRiskNotification } from '@/hooks/useRiskNotification'
 import { useWarningDismissal } from '@/hooks/useWarningDismissal'
 import { getEmotionsByDate } from '@/lib/emotionRepository'
 import { aggregateDailyRisk } from '@/lib/riskCalculator'
+import type { StressState } from '@/lib/stressTypes'
 
 export default function StatsPage() {
   const today = new Date().toLocaleDateString('en-CA')
@@ -26,6 +28,16 @@ export default function StatsPage() {
   useRiskNotification({
     riskLevel: todayRisk?.riskLevel ?? null,
     date: today,
+    permission,
+  })
+
+  // TODO: 스트레스 판별 담당자가 일별 stressScore/stressLevel 집계를 제공하면 연결 예정.
+  // 점수 계산은 이 페이지에서 하지 않는다.
+  const dailyStressState: StressState | null = null
+  useDailyStressNotification({
+    date: today,
+    stressScore: dailyStressState?.stressScore ?? null,
+    stressLevel: dailyStressState?.stressLevel ?? null,
     permission,
   })
 
