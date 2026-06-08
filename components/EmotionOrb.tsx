@@ -40,6 +40,8 @@ export default function EmotionOrb({
   // dominant이 바뀔 때마다 새 카피를 뽑아 지루함 방지.
   const [caption, setCaption] = useState<string>(() => EMOTION_CAPTIONS[dominant][0])
   useEffect(() => {
+    // 클라이언트 전용 랜덤 추첨 — hydration mismatch 방지를 위한 의도적 setState.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCaption(pickCaption(dominant))
   }, [dominant])
 

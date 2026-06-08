@@ -48,6 +48,8 @@ function Gauge({ label, value, color }: { label: string; value: number; color: s
 export default function DailyReport({ records }: { records: EmotionRecord[] }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   useEffect(() => {
+    // localStorage는 클라이언트에서만 — hydration mismatch 방지를 위한 의도적 setState.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfile(loadProfile())
   }, [])
 
