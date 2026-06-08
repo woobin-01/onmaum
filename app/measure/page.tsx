@@ -3,14 +3,18 @@
 import { useCallback, useEffect, useState } from 'react'
 import CameraView from '@/components/CameraView'
 import EmotionDisplay from '@/components/EmotionDisplay'
-import Onboarding from '@/components/Onboarding'
+import EmotionOrb from '@/components/EmotionOrb'
+import OrbPipButton from '@/components/OrbPipButton'
+import OnboardingSurvey from '@/components/OnboardingSurvey'
 import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
-import { loadFaceApiModels } from '@/lib/emotionAnalysis'
+import { loadFaceApiModels, type EmotionResult } from '@/lib/emotionAnalysis'
 import { db } from '@/lib/db'
 
 type ModelStatus = 'loading' | 'ready' | 'error'
 
 const ONBOARDED_KEY = 'onmaum_onboarded'
+
+const CALM_FALLBACK: EmotionResult = { happy: 0.1, calm: 0.7, sad: 0.1, angry: 0.1 }
 
 function readOnboarded(): boolean {
   if (typeof window === 'undefined') return true
@@ -30,6 +34,7 @@ export default function Home() {
   const [active, setActive] = useState(false)
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [recordCount, setRecordCount] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -64,6 +69,19 @@ export default function Home() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    db.emotions
+      .count()
+      .then((c) => {
+        if (!cancelled) setRecordCount(c)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [active])
 
   const { currentEmotion, saveError } = useEmotionRecorder({
     active,
@@ -104,7 +122,7 @@ export default function Home() {
   const startDisabled = active || modelStatus !== 'ready' || !dbReady
 
   if (!onboarded) {
-    return <Onboarding onDone={handleOnboardingDone} />
+    return <OnboardingSurvey onDone={handleOnboardingDone} />
   }
 
   return (
@@ -114,6 +132,15 @@ export default function Home() {
           <h1 className="text-2xl font-semibold text-ink-900">측정</h1>
           <p className="mt-2 text-sm text-ink-500">실시간 감정 분석</p>
         </header>
+
+        <div className="flex flex-col items-center gap-4">
+          <EmotionOrb
+            emotions={currentEmotion ?? CALM_FALLBACK}
+            recordCount={recordCount}
+            size={150}
+          />
+          <OrbPipButton emotions={currentEmotion ?? CALM_FALLBACK} recordCount={recordCount} />
+        </div>
 
         {modelStatus === 'loading' && (
           <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-ink-600">
