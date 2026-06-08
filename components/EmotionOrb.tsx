@@ -1,0 +1,67 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
+import type { EmotionResult } from '@/lib/emotionAnalysis'
+import { gradientColors, topTwoEmotions } from '@/lib/orbColor'
+import { motionFor } from '@/lib/orbMotion'
+import { opacityFromCount } from '@/lib/orbStages'
+import { EMOTION_CAPTIONS, pickCaption } from '@/lib/orbCaption'
+import styles from './EmotionOrb.module.css'
+
+interface Props {
+  /** 현재 감정 분포 (오브 색·움직임의 근거) */
+  emotions: EmotionResult
+  /** 누적 기록 개수 (투명→자기 색 성장) */
+  recordCount: number
+  /** 오브 지름(px) */
+  size?: number
+  /** 한 줄 카피 표시 여부 */
+  showCaption?: boolean
+  className?: string
+}
+
+/**
+ * 감정 오브 — 엔진(orbColor/orbMotion/orbStages/orbCaption)을 소비하는
+ * "또렷(crisp)" 글래스+오로라 시각 컴포넌트.
+ */
+export default function EmotionOrb({
+  emotions,
+  recordCount,
+  size = 160,
+  showCaption = true,
+  className,
+}: Props) {
+  const { from, to } = gradientColors(emotions)
+  const [dominant] = topTwoEmotions(emotions)
+  const motion = motionFor(dominant)
+  const opacity = opacityFromCount(recordCount)
+  // SSR은 결정적 첫 변형으로(hydration mismatch 방지), 마운트 후 클라이언트에서만 랜덤 추첨.
+  // dominant이 바뀔 때마다 새 카피를 뽑아 지루함 방지.
+  const [caption, setCaption] = useState<string>(() => EMOTION_CAPTIONS[dominant][0])
+  useEffect(() => {
+    setCaption(pickCaption(dominant))
+  }, [dominant])
+
+  const orbStyle = {
+    width: size,
+    height: size,
+    opacity,
+    '--from': from,
+    '--to': to,
+    '--dur': `${motion.breathPeriodMs}ms`,
+    '--amp': motion.breathAmp,
+    '--floaty': `${motion.floatY * size}px`,
+  } as CSSProperties & Record<string, string | number>
+
+  return (
+    <div className={[styles.wrap, className].filter(Boolean).join(' ')}>
+      <div className={styles.orb} style={orbStyle}>
+        <div className={styles.flow} />
+        <div className={styles.gloss} />
+        <div className={styles.rim} />
+      </div>
+      {showCaption && <p className={styles.caption}>{caption}</p>}
+    </div>
+  )
+}
