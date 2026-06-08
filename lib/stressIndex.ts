@@ -40,3 +40,43 @@ export function mindBalance(s: StressScores): number {
 export function affectEnergy(s: StressScores): number {
   return s.positive + s.stress
 }
+
+export const NEG_PRESENT_THRESHOLD = 0.4
+export const MIN_SUSTAIN_MS = 3000
+
+export interface NegFrame {
+  neg: number
+  intervalMs: number
+}
+
+/**
+ * 부정(neg ≥ negThreshold)이 minSustainMs 이상 "연속"된 구간만 neg를 유지하고,
+ * 짧게 튄 스파이크나 임계 미만 프레임은 0으로 만든다. (spec §4: 지속된 부정만 인정)
+ */
+export function gateSustainedNegative(
+  frames: NegFrame[],
+  opts?: { negThreshold?: number; minSustainMs?: number },
+): number[] {
+  const negThreshold = opts?.negThreshold ?? NEG_PRESENT_THRESHOLD
+  const minSustainMs = opts?.minSustainMs ?? MIN_SUSTAIN_MS
+
+  const out = frames.map(() => 0)
+  let i = 0
+  while (i < frames.length) {
+    if (frames[i].neg >= negThreshold) {
+      let j = i
+      let runMs = 0
+      while (j < frames.length && frames[j].neg >= negThreshold) {
+        runMs += frames[j].intervalMs
+        j++
+      }
+      if (runMs >= minSustainMs) {
+        for (let k = i; k < j; k++) out[k] = frames[k].neg
+      }
+      i = j
+    } else {
+      i++
+    }
+  }
+  return out
+}

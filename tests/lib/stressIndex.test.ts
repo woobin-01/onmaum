@@ -4,6 +4,9 @@ import {
   aggregateStress,
   mindBalance,
   affectEnergy,
+  gateSustainedNegative,
+  NEG_PRESENT_THRESHOLD,
+  MIN_SUSTAIN_MS,
 } from '@/lib/stressIndex'
 
 describe('frameContribution', () => {
@@ -56,5 +59,31 @@ describe('파생값', () => {
   })
   it('정서활력 = 긍정 + 스트레스', () => {
     expect(affectEnergy({ positive: 70, stress: 40 })).toBeCloseTo(110)
+  })
+})
+
+describe('gateSustainedNegative', () => {
+  it('3초 이상 지속된 부정만 인정', () => {
+    const frames = Array.from({ length: 5 }, () => ({ neg: 0.6, intervalMs: 1000 }))
+    expect(gateSustainedNegative(frames)).toEqual([0.6, 0.6, 0.6, 0.6, 0.6])
+  })
+
+  it('잠깐 튄 부정(1초)은 0으로 배제', () => {
+    const frames = [
+      { neg: 0, intervalMs: 1000 },
+      { neg: 0.6, intervalMs: 1000 }, // 단발 스파이크
+      { neg: 0, intervalMs: 1000 },
+    ]
+    expect(gateSustainedNegative(frames)).toEqual([0, 0, 0])
+  })
+
+  it('임계 미만 부정은 부정 프레임이 아님 → 0', () => {
+    const frames = Array.from({ length: 5 }, () => ({ neg: 0.2, intervalMs: 1000 }))
+    expect(gateSustainedNegative(frames)).toEqual([0, 0, 0, 0, 0])
+  })
+
+  it('상수 기본값', () => {
+    expect(NEG_PRESENT_THRESHOLD).toBe(0.4)
+    expect(MIN_SUSTAIN_MS).toBe(3000)
   })
 })
