@@ -7,6 +7,8 @@ import {
   gateSustainedNegative,
   NEG_PRESENT_THRESHOLD,
   MIN_SUSTAIN_MS,
+  emaStress,
+  EMA_ALPHA,
 } from '@/lib/stressIndex'
 
 describe('frameContribution', () => {
@@ -85,5 +87,20 @@ describe('gateSustainedNegative', () => {
   it('상수 기본값', () => {
     expect(NEG_PRESENT_THRESHOLD).toBe(0.4)
     expect(MIN_SUSTAIN_MS).toBe(3000)
+  })
+})
+
+describe('emaStress', () => {
+  it('이전값 null → 현재값 그대로', () => {
+    expect(emaStress(null, 70)).toBe(70)
+  })
+
+  it('이전 0, 현재 100, alpha 0.5 → 50', () => {
+    expect(emaStress(0, 100, 0.5)).toBeCloseTo(50)
+  })
+
+  it('기본 alpha 적용', () => {
+    expect(EMA_ALPHA).toBe(0.3)
+    expect(emaStress(0, 100)).toBeCloseTo(30)
   })
 })

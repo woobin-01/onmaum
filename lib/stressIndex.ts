@@ -80,3 +80,14 @@ export function gateSustainedNegative(
   }
   return out
 }
+
+export const EMA_ALPHA = 0.3
+
+/** 지금값(현재 상태) 스무딩 — 최근 값에 가중. prev가 null이면 현재값으로 시작. */
+export function emaStress(
+  prev: number | null,
+  current: number,
+  alpha: number = EMA_ALPHA,
+): number {
+  return prev === null ? current : prev + alpha * (current - prev)
+}
