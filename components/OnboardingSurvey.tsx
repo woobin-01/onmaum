@@ -10,11 +10,14 @@ interface Option {
 
 const STEPS: { question: string; options: Option[] }[] = [
   {
-    question: '지친 날, 뭘 마시면\n좀 나아져요?',
+    question: '지친 날, 뭘 마시거나\n먹으면 좀 나아져요?',
     options: [
       { emoji: '☕', label: '커피 한 잔' },
       { emoji: '🍵', label: '따뜻한 차' },
       { emoji: '💧', label: '시원한 물' },
+      { emoji: '🍫', label: '달달한 간식' },
+      { emoji: '🥤', label: '탄산 한 모금' },
+      { emoji: '🍊', label: '상큼한 과일' },
     ],
   },
   {
@@ -23,6 +26,9 @@ const STEPS: { question: string; options: Option[] }[] = [
       { emoji: '🚶', label: '짧은 산책' },
       { emoji: '🪟', label: '창밖 보기' },
       { emoji: '💆', label: '어깨 스트레칭' },
+      { emoji: '🙆', label: '기지개 켜기' },
+      { emoji: '😌', label: '잠깐 눈 감기' },
+      { emoji: '🚰', label: '세수·손 씻기' },
     ],
   },
   {
@@ -31,6 +37,20 @@ const STEPS: { question: string; options: Option[] }[] = [
       { emoji: '🫁', label: '박스 호흡' },
       { emoji: '🧘', label: '3분 명상' },
       { emoji: '🖼️', label: '좋아하는 사진 보기' },
+      { emoji: '🕯️', label: '향초·아로마' },
+      { emoji: '🪴', label: '반려동물·식물 보기' },
+      { emoji: '🌥️', label: '잠깐 멍때리기' },
+    ],
+  },
+  {
+    question: '위로가 필요한 날엔\n뭐가 힘이 돼요?',
+    options: [
+      { emoji: '💌', label: '응원 한 마디' },
+      { emoji: '📜', label: '좋아하는 명언' },
+      { emoji: '😸', label: '귀여운 사진·밈' },
+      { emoji: '💬', label: '누군가와 잠깐 수다' },
+      { emoji: '🚿', label: '따뜻한 샤워' },
+      { emoji: '🛌', label: '일찍 잠들기' },
     ],
   },
 ]
@@ -42,11 +62,9 @@ interface Props {
 /** "나만의 스트레스 해소법" 설문 — 대화형 위저드(시안 B). (spec §7) */
 export default function OnboardingSurvey({ onDone }: Props) {
   const [step, setStep] = useState(0)
-  const [selections, setSelections] = useState<Set<string>[]>([
-    new Set(),
-    new Set(),
-    new Set(),
-  ])
+  const [selections, setSelections] = useState<Set<string>[]>(() =>
+    STEPS.map(() => new Set<string>()),
+  )
 
   const currentStep = STEPS[step]
   const currentSelected = selections[step]
