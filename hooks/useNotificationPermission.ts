@@ -16,9 +16,9 @@ function readPermission(): PermissionState {
 }
 
 export function useNotificationPermission(): Result {
-  const [permission, setPermission] = useState<PermissionState>(() =>
-    readPermission(),
-  )
+  // 서버/첫 클라이언트 렌더를 'unsupported'로 일치시켜 hydration mismatch 방지.
+  // 실제 권한은 mount 후 effect에서 로드한다.
+  const [permission, setPermission] = useState<PermissionState>('unsupported')
 
   // 첫 마운트 시 클라이언트 환경 권한 다시 체크 (SSR hydration 호환). 한 번만 호출, cascading 아님.
   useEffect(() => {

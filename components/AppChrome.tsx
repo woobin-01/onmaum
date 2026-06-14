@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import ContactsFooter from '@/components/ContactsFooter'
 import Navigation from '@/components/Navigation'
+import NudgeHost from '@/components/NudgeHost'
 
 interface Props {
   children: React.ReactNode
@@ -22,6 +23,7 @@ export default function AppChrome({ children }: Props) {
       <Navigation />
       <div className="flex-1">{children}</div>
       <ContactsFooter />
+      <NudgeHost />
     </>
   )
 }
