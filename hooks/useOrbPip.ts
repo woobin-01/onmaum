@@ -64,7 +64,8 @@ export function useOrbPip(): OrbPipApi {
     body.style.display = 'flex'
     body.style.alignItems = 'center'
     body.style.justifyContent = 'center'
-    body.style.background = 'radial-gradient(circle at 50% 40%, #11201d, #06100e 80%)'
+    // 앱과 같은 라이트 톤 — 어두운 배경에선 글래스 오브가 칙칙해 보여 라이트로 통일
+    body.style.background = 'radial-gradient(circle at 50% 38%, #ffffff, #eef1ef 88%)'
 
     pipWindow.addEventListener('pagehide', () => {
       pipWindowRef.current = null

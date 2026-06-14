@@ -18,6 +18,8 @@ interface Props {
   size?: number
   /** 한 줄 카피 표시 여부 */
   showCaption?: boolean
+  /** 카피 색 톤 — 라이트 배경 'dark'(기본), 다크 배경 'light' */
+  captionTone?: 'dark' | 'light'
   className?: string
 }
 
@@ -30,6 +32,7 @@ export default function EmotionOrb({
   recordCount,
   size = 160,
   showCaption = true,
+  captionTone = 'dark',
   className,
 }: Props) {
   const { from, to } = gradientColors(emotions)
@@ -63,7 +66,15 @@ export default function EmotionOrb({
         <div className={styles.gloss} />
         <div className={styles.rim} />
       </div>
-      {showCaption && <p className={styles.caption}>{caption}</p>}
+      {showCaption && (
+        <p
+          className={[styles.caption, captionTone === 'light' ? styles.captionLight : '']
+            .filter(Boolean)
+            .join(' ')}
+        >
+          {caption}
+        </p>
+      )}
     </div>
   )
 }

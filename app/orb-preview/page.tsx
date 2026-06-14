@@ -46,7 +46,7 @@ export default function OrbPreviewPage() {
         <div style={rowStyle}>
           {STATES.map((s) => (
             <div key={s.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <EmotionOrb emotions={s.emotions} recordCount={24} size={150} />
+              <EmotionOrb emotions={s.emotions} recordCount={24} size={150} captionTone="light" />
               <span style={{ fontSize: 12, color: 'rgba(155,176,170,0.8)' }}>{s.label}</span>
             </div>
           ))}

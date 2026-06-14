@@ -47,7 +47,7 @@ export default function DemoPage() {
       title: '근무 중 · 대기',
       body: (
         <>
-          <EmotionOrb emotions={CALM} recordCount={24} size={150} />
+          <EmotionOrb emotions={CALM} recordCount={24} size={150} captionTone="light" />
           <p style={meta}>오늘 통화 8건 · 스트레스 32</p>
         </>
       ),
