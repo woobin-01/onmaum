@@ -24,6 +24,7 @@ interface CheckinView {
 
 export function useCheckin({ now = new Date() }: Args = {}): CheckinView {
   const date = now.toLocaleDateString('en-CA')
+  const nowMs = now.getTime()
 
   const todayRecords = useLiveQuery(() => getEmotionsByDate(date), [date])
   const rangeRecords = useLiveQuery(() => {
@@ -63,9 +64,9 @@ export function useCheckin({ now = new Date() }: Args = {}): CheckinView {
       if (!slot) return
       const s = loadSettings()
       saveSettings({ ...s, calibrationOffset: nextOffset(s.calibrationOffset, report) })
-      saveCheckinEntry(date, slot, report, now.getTime())
+      saveCheckinEntry(date, slot, report, nowMs)
     },
-    [slot, date, now],
+    [slot, date, nowMs],
   )
 
   return { due, slot, line, submit }
