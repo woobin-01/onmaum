@@ -14,7 +14,7 @@ export default function LandingHero() {
       <div className="relative z-10 max-w-[560px] px-[52px]">
         <div className="mb-6 flex items-center gap-[10px] text-[10px] font-light uppercase tracking-[0.2em] text-[#6BAB9A]">
           <span className="block h-px w-7 bg-[#6BAB9A] opacity-60" />
-          마음 상태 모니터링
+          마음 상태 셀프 회고
         </div>
 
         <h1

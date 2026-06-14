@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 const NAV_LINKS = [
   { href: '#features', label: '기능' },
   { href: '#data', label: '데이터' },
-  { href: '#risk', label: '위험도' },
+  { href: '#risk', label: '비추기' },
 ] as const
 
 export default function LandingNav() {
