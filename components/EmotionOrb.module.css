@@ -51,6 +51,12 @@
   font-size: 14px;
   line-height: 1.5;
   text-align: center;
+  /* 라이트 배경에서 읽히는 잉크 톤 (앱 전체 라이트 통일) */
+  color: #525252;
+}
+
+/* 다크 배경(orb-preview/demo)용 밝은 카피 */
+.captionLight {
   color: rgba(230, 240, 236, 0.92);
 }
 
