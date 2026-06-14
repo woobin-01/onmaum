@@ -95,7 +95,7 @@ export default function DemoPage() {
       title: '퇴근 통합 리포트',
       body: (
         <div style={{ width: 300, maxWidth: '90vw' }}>
-          <DailyReport records={SAMPLE_RECORDS} />
+          <DailyReport records={SAMPLE_RECORDS} historyRecords={SAMPLE_RECORDS} offset={0} />
         </div>
       ),
     },
