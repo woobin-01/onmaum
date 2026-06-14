@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const TABS = [
   { href: '/measure', label: '측정' },
-  { href: '/stats', label: '통계' },
+  { href: '/stats', label: '오늘' },
 ] as const
 
 export default function Navigation() {

@@ -1,50 +1,62 @@
 'use client'
 
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import DailyRiskCard from '@/components/DailyRiskCard'
-import NotificationToggle from '@/components/NotificationToggle'
+import CheckInCard from '@/components/CheckInCard'
+import DailyReport from '@/components/DailyReport'
+import NudgeSettings from '@/components/NudgeSettings'
 import RecentRecords from '@/components/RecentRecords'
-import RiskWarningModal from '@/components/RiskWarningModal'
-import SelfCareTip from '@/components/SelfCareTip'
 import TrendChart from '@/components/TrendChart'
-import { useNotificationPermission } from '@/hooks/useNotificationPermission'
-import { useRiskNotification } from '@/hooks/useRiskNotification'
-import { useWarningDismissal } from '@/hooks/useWarningDismissal'
-import { getEmotionsByDate } from '@/lib/emotionRepository'
-import { aggregateDailyRisk } from '@/lib/riskCalculator'
+import { useCheckin } from '@/hooks/useCheckin'
+import { getEmotionsByDate, getEmotionsByDateRange } from '@/lib/emotionRepository'
+import { loadSettings } from '@/lib/settings'
+import { BASELINE_WINDOW_DAYS } from '@/lib/baseline'
 
 export default function StatsPage() {
   const today = new Date().toLocaleDateString('en-CA')
-  const todayRecords = useLiveQuery(() => getEmotionsByDate(today), [today])
-  const todayRisk = todayRecords
-    ? aggregateDailyRisk(todayRecords, today)
-    : null
-  const { dismissed, dismiss } = useWarningDismissal(today)
-  const showWarning = todayRisk?.riskLevel === 'warning' && !dismissed
+  const [checkinDismissed, setCheckinDismissed] = useState(false)
 
-  const { permission } = useNotificationPermission()
-  useRiskNotification({
-    riskLevel: todayRisk?.riskLevel ?? null,
-    date: today,
-    permission,
-  })
+  const todayRecords = useLiveQuery(() => getEmotionsByDate(today), [today])
+  const historyRecords = useLiveQuery(() => {
+    const start = new Date()
+    start.setDate(start.getDate() - (BASELINE_WINDOW_DAYS - 1))
+    start.setHours(0, 0, 0, 0)
+    const end = new Date()
+    end.setHours(23, 59, 59, 999)
+    return getEmotionsByDateRange(start, end)
+  }, [today])
+
+  const checkin = useCheckin()
+  const offset = loadSettings().calibrationOffset
 
   return (
     <main className="min-h-screen px-6 py-8">
       <section className="mx-auto w-full max-w-md space-y-6">
         <header className="text-center">
-          <h1 className="text-2xl font-semibold text-ink-900">통계</h1>
-          <p className="mt-2 text-sm text-ink-500">오늘과 최근 기록</p>
+          <h1 className="text-2xl font-semibold text-ink-900">오늘</h1>
+          <p className="mt-2 text-sm text-ink-500">마음 한눈에 보기</p>
         </header>
 
-        <NotificationToggle />
-        <DailyRiskCard />
+        {checkin.due && checkin.slot && !checkinDismissed && (
+          <CheckInCard
+            slot={checkin.slot}
+            line={checkin.line}
+            onReport={(r) => {
+              checkin.submit(r)
+              setCheckinDismissed(true)
+            }}
+          />
+        )}
+
+        <DailyReport
+          records={todayRecords ?? []}
+          historyRecords={historyRecords ?? []}
+          offset={offset}
+        />
         <TrendChart />
-        <SelfCareTip />
+        <NudgeSettings />
         <RecentRecords />
       </section>
-
-      <RiskWarningModal open={showWarning} onClose={dismiss} />
     </main>
   )
 }
