@@ -15,7 +15,7 @@ export default function LandingPage() {
   return (
     <div
       data-theme="landing"
-      className="min-h-screen bg-[#050503] text-[#F0EDE6]"
+      className="min-h-screen bg-ink-50 text-ink-900"
     >
       <LandingNav />
       <LandingHero />

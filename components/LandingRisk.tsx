@@ -28,11 +28,11 @@ export default function LandingRisk() {
   return (
     <section
       id="risk"
-      className="border-t border-white/[0.06] px-[52px] py-[120px]"
+      className="border-t border-ink-200 px-[52px] py-[120px]"
     >
       <div className="mx-auto flex max-w-[1100px] flex-wrap items-center gap-20">
         <div className="flex-1 min-w-[280px]">
-          <p className="r flex items-center gap-[10px] text-[10px] font-light uppercase tracking-[0.18em] text-[rgba(240,237,230,0.38)] before:block before:h-px before:w-5 before:bg-[rgba(240,237,230,0.38)] before:content-['']">
+          <p className="r flex items-center gap-[10px] text-[10px] font-light uppercase tracking-[0.18em] text-ink-400 before:block before:h-px before:w-5 before:bg-ink-300 before:content-['']">
             Risk Levels
           </p>
           <h2
@@ -43,7 +43,7 @@ export default function LandingRisk() {
             <br />
             마음을 읽어요
           </h2>
-          <p className="r d2 max-w-[380px] text-[13px] font-light leading-[1.8] text-[rgba(240,237,230,0.38)]">
+          <p className="r d2 max-w-[380px] text-[13px] font-light leading-[1.8] text-ink-500">
             부정 비율과 평탄 정서를 기반으로 오늘의 마음 상태를 자동
             분류합니다. 위험 수준이 되면 부드럽게 알려드려요.
           </p>
@@ -53,7 +53,7 @@ export default function LandingRisk() {
           {RISKS.map((r, i) => (
             <div
               key={r.name}
-              className={`r ${i > 0 ? `d${i}` : ''} flex items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-7 py-6 transition-all duration-300 hover:translate-x-1.5 hover:border-white/10 hover:bg-white/[0.04]`}
+              className={`r ${i > 0 ? `d${i}` : ''} flex items-center justify-between rounded-2xl border border-ink-200 bg-white px-7 py-6 transition-all duration-300 hover:translate-x-1.5 hover:border-ink-300 hover:bg-ink-50`}
             >
               <div className="flex items-center gap-4">
                 <span
@@ -65,10 +65,10 @@ export default function LandingRisk() {
                   }}
                 />
                 <div>
-                  <div className="text-[15px] font-light text-[#F0EDE6]">
+                  <div className="text-[15px] font-light text-ink-900">
                     {r.name}
                   </div>
-                  <div className="mt-0.5 text-[11px] font-light text-[rgba(240,237,230,0.38)]">
+                  <div className="mt-0.5 text-[11px] font-light text-ink-500">
                     {r.desc}
                   </div>
                 </div>
