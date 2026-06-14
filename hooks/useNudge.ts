@@ -27,6 +27,8 @@ export function useNudge() {
     return getEmotionsByDateRange(start, end)
   }, [today])
 
+  // 평가는 레코드 flush(측정 중 ~60s 주기)에 의해 구동된다 — 벽시계 타이머가 아니다.
+  // 측정이 멈추면 새 flush가 없어 standing-high 상태가 재트리거되지 않는다(온디바이스·무백그라운드 설계).
   useEffect(() => {
     if (!todayRecords || !rangeRecords) return
     const now = new Date()
