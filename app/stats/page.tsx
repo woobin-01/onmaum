@@ -27,7 +27,7 @@ export default function StatsPage() {
   }, [today])
 
   const checkin = useCheckin()
-  const offset = loadSettings().calibrationOffset
+  const [offset, setOffset] = useState(() => loadSettings().calibrationOffset)
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -43,6 +43,7 @@ export default function StatsPage() {
             line={checkin.line}
             onReport={(r) => {
               checkin.submit(r)
+              setOffset(loadSettings().calibrationOffset)
               setCheckinDismissed(true)
             }}
           />
