@@ -65,7 +65,6 @@ export function useCheckin({ now = new Date() }: Args = {}): CheckinView {
       saveSettings({ ...s, calibrationOffset: nextOffset(s.calibrationOffset, report) })
       saveCheckinEntry(date, slot, report, now.getTime())
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [slot, date, now],
   )
 
