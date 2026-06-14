@@ -50,7 +50,7 @@ export default function Home() {
     loadEmotionModels()
       .then(() => {
         if (cancelled) return
-        console.log('✅ face-api 모델 로드 완료')
+        console.log('✅ 감정 인식 모델 로드 완료')
         setModelStatus('ready')
       })
       .catch((err: unknown) => {
@@ -156,7 +156,7 @@ export default function Home() {
 
         {modelStatus === 'loading' && (
           <div className="rounded-2xl border border-ink-200 bg-white p-4 text-center text-sm text-ink-600">
-            ⏳ face-api 모델 로딩 중...
+            ⏳ 감정 인식 모델 로딩 중...
           </div>
         )}
         {modelStatus === 'error' && (
