@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import {
   computeBaselineState,
   classifyStress,
-  MIN_VALID_DAYS,
   MIN_VALID_DAY_DURATION_MS,
 } from '@/lib/baseline'
 import type { DailyStressPoint } from '@/lib/dailyStress'
