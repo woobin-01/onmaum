@@ -1,4 +1,7 @@
-import * as faceapi from 'face-api.js'
+import { loadFaceDetector, detectFaceBox } from './faceDetect'
+import { loadHsemotion, classifyEmotion } from './hsemotion'
+import { toModelTensor, MODEL_SIZE } from './emotionPreprocess'
+import { map8ToEmotionResult } from './emotionMapping'
 
 export type Emotion = 'happy' | 'calm' | 'sad' | 'angry'
 
@@ -18,49 +21,44 @@ export const EMOTION_LABELS: Record<Emotion, string> = {
 
 export const EMOTION_ORDER: Emotion[] = ['happy', 'calm', 'sad', 'angry']
 
-export interface RawExpressions {
-  happy: number
-  neutral: number
-  sad: number
-  angry: number
-  disgusted: number
+/** face-api 검출기 + HSEmotion onnx 세션 동시 로드. */
+export async function loadEmotionModels(): Promise<void> {
+  await Promise.all([loadFaceDetector(), loadHsemotion()])
 }
 
-export function normalizeExpressions(raw: RawExpressions): EmotionResult {
-  const happy = raw.happy
-  const calm = raw.neutral
-  const sad = raw.sad
-  const angry = raw.angry + raw.disgusted // disgust를 적대/부정 정서로 합침 (spec §3)
-  const sum = happy + calm + sad + angry
-  if (sum <= 0) return { happy: 0, calm: 1, sad: 0, angry: 0 }
-  return { happy: happy / sum, calm: calm / sum, sad: sad / sum, angry: angry / sum }
+let cropCanvas: HTMLCanvasElement | null = null
+function getCropCanvas(): HTMLCanvasElement {
+  if (!cropCanvas) {
+    cropCanvas = document.createElement('canvas')
+    cropCanvas.width = MODEL_SIZE
+    cropCanvas.height = MODEL_SIZE
+  }
+  return cropCanvas
 }
 
-const MODELS_URL = '/models'
-
-const DETECTOR_OPTIONS = new faceapi.SsdMobilenetv1Options({
-  minConfidence: 0.5,
-})
-
-export async function loadFaceApiModels(): Promise<void> {
-  await Promise.all([
-    faceapi.nets.ssdMobilenetv1.loadFromUri(MODELS_URL),
-    faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_URL),
-    faceapi.nets.faceExpressionNet.loadFromUri(MODELS_URL),
-  ])
-}
-
+/** 얼굴 검출 → 224 크롭 → 전처리 → HSEmotion 추론 → 4감정. 미검출/실패 시 null. */
 export async function analyzeEmotion(
-  videoEl: HTMLVideoElement,
+  video: HTMLVideoElement,
 ): Promise<EmotionResult | null> {
-  const detection = await faceapi
-    .detectSingleFace(videoEl, DETECTOR_OPTIONS)
-    .withFaceLandmarks()
-    .withFaceExpressions()
+  const box = await detectFaceBox(video)
+  if (!box) return null
 
-  if (!detection) return null
+  const canvas = getCropCanvas()
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx) return null
 
-  return normalizeExpressions(detection.expressions)
+  // 얼굴 주변 10% 여백 포함 크롭 → 224×224
+  const m = 0.1
+  const sx = Math.max(0, box.x - box.width * m)
+  const sy = Math.max(0, box.y - box.height * m)
+  const sw = Math.min(video.videoWidth - sx, box.width * (1 + 2 * m))
+  const sh = Math.min(video.videoHeight - sy, box.height * (1 + 2 * m))
+  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, MODEL_SIZE, MODEL_SIZE)
+
+  const imageData = ctx.getImageData(0, 0, MODEL_SIZE, MODEL_SIZE)
+  const tensor = toModelTensor(imageData)
+  const probs8 = await classifyEmotion(tensor)
+  return map8ToEmotionResult(probs8)
 }
 
 export function getDominantEmotion(emotions: EmotionResult): Emotion {

@@ -7,7 +7,7 @@ import EmotionOrb from '@/components/EmotionOrb'
 import OrbPipButton from '@/components/OrbPipButton'
 import OnboardingSurvey from '@/components/OnboardingSurvey'
 import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
-import { loadFaceApiModels, type EmotionResult } from '@/lib/emotionAnalysis'
+import { loadEmotionModels, type EmotionResult } from '@/lib/emotionAnalysis'
 import { db } from '@/lib/db'
 
 type ModelStatus = 'loading' | 'ready' | 'error'
@@ -47,7 +47,7 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false
 
-    loadFaceApiModels()
+    loadEmotionModels()
       .then(() => {
         if (cancelled) return
         console.log('✅ face-api 모델 로드 완료')
