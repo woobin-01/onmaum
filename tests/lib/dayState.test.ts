@@ -35,3 +35,22 @@ describe('nudge dayState', () => {
     expect(loadNudgeDayState('2026-06-13')).toEqual({ count: 0, lastAtMs: null })
   })
 })
+
+describe('dayState 손상 데이터 방어', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('checkin 값이 배열이 아니면 [] 반환', () => {
+    localStorage.setItem('onmaum_checkin_2026-06-12', JSON.stringify({ not: 'an array' }))
+    expect(loadCheckinDone('2026-06-12')).toEqual([])
+  })
+
+  it('checkin 깨진 JSON → []', () => {
+    localStorage.setItem('onmaum_checkin_2026-06-12', '{broken')
+    expect(loadCheckinDone('2026-06-12')).toEqual([])
+  })
+
+  it('nudge 부분/손상 객체 → 기본값으로 보정', () => {
+    localStorage.setItem('onmaum_nudge_2026-06-12', JSON.stringify({ count: 'x' }))
+    expect(loadNudgeDayState('2026-06-12')).toEqual({ count: 0, lastAtMs: null })
+  })
+})

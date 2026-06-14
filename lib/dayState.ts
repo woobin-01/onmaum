@@ -31,8 +31,14 @@ function writeJson(key: string, value: unknown): void {
 }
 
 export function loadCheckinDone(date: string): CheckinSlot[] {
-  const entries = readJson<CheckinEntry[]>(checkinKey(date), [])
-  return entries.map((e) => e.slot)
+  const entries = readJson<unknown>(checkinKey(date), [])
+  if (!Array.isArray(entries)) return []
+  return entries
+    .filter(
+      (e): e is CheckinEntry =>
+        typeof e === 'object' && e !== null && typeof (e as { slot?: unknown }).slot === 'string',
+    )
+    .map((e) => e.slot)
 }
 
 export function saveCheckinEntry(
@@ -47,7 +53,10 @@ export function saveCheckinEntry(
 }
 
 export function loadNudgeDayState(date: string): NudgeDayState {
-  return readJson<NudgeDayState>(nudgeKey(date), { count: 0, lastAtMs: null })
+  const raw = readJson<Partial<NudgeDayState>>(nudgeKey(date), {})
+  const count = typeof raw?.count === 'number' ? raw.count : 0
+  const lastAtMs = typeof raw?.lastAtMs === 'number' ? raw.lastAtMs : null
+  return { count, lastAtMs }
 }
 
 export function saveNudgeDayState(date: string, state: NudgeDayState): void {
