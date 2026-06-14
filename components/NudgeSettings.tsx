@@ -1,12 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNotificationPermission } from '@/hooks/useNotificationPermission'
-import { loadSettings, saveSettings, type Settings } from '@/lib/settings'
+import { DEFAULT_SETTINGS, loadSettings, saveSettings, type Settings } from '@/lib/settings'
 
 export default function NudgeSettings() {
   const { supported, permission, request } = useNotificationPermission()
-  const [settings, setSettings] = useState<Settings>(() => loadSettings())
+  // localStorage는 클라이언트에서만 — 첫 렌더는 기본값으로 SSR과 일치시키고, mount 후 실제 설정 로드 (hydration mismatch 방지)
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSettings(loadSettings())
+  }, [])
 
   const update = (next: Settings) => {
     setSettings(next)

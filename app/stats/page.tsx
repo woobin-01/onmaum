@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import CheckInCard from '@/components/CheckInCard'
 import DailyReport from '@/components/DailyReport'
@@ -27,7 +27,12 @@ export default function StatsPage() {
   }, [today])
 
   const checkin = useCheckin()
-  const [offset, setOffset] = useState(() => loadSettings().calibrationOffset)
+  // localStorage는 클라이언트에서만 — 첫 렌더 0으로 SSR과 일치, mount 후 로드 (hydration mismatch 방지)
+  const [offset, setOffset] = useState(0)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOffset(loadSettings().calibrationOffset)
+  }, [])
 
   return (
     <main className="min-h-screen px-6 py-8">
