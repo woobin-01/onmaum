@@ -16,11 +16,11 @@ function StatBar({ label, percent, color }: StatBarProps) {
   }, [percent])
   return (
     <div>
-      <div className="mb-1.5 flex justify-between text-[10px] tracking-[0.06em] text-[rgba(240,237,230,0.38)]">
+      <div className="mb-1.5 flex justify-between text-[10px] tracking-[0.06em] text-ink-400">
         <span>{label}</span>
         <span style={{ color }}>{percent}%</span>
       </div>
-      <div className="h-[3px] overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="h-[3px] overflow-hidden rounded-full bg-ink-200">
         <div
           className="h-full rounded-full"
           style={{
@@ -37,8 +37,8 @@ function StatBar({ label, percent, color }: StatBarProps) {
 const FEATURES = [
   {
     n: '01',
-    title: '실시간 감정 분석',
-    desc: '웹캠으로 기쁨·평온·슬픔·화남 4가지 감정을 실시간 감지. face-api.js 기반, 모든 분석은 브라우저 내에서만 처리됩니다.',
+    title: '실시간 감정 읽기',
+    desc: '웹캠으로 표정을 읽어 기쁨·평온·슬픔·화남을 가늠해요. face-api.js 기반, 모든 분석은 브라우저 안에서만. 추정이라 단정하지 않아요.',
   },
   {
     n: '02',
@@ -47,8 +47,8 @@ const FEATURES = [
   },
   {
     n: '03',
-    title: '일별 위험도 계산',
-    desc: '부정 비율과 평탄 정서를 기반으로 양호·주의·위험을 자동 분류합니다.',
+    title: '2축 스트레스 지수',
+    desc: '긍정과 스트레스를 따로 재고, 평소(개인 기준선) 대비 변화를 부드럽게 보여줘요. 무표정은 소진으로 치지 않습니다.',
   },
   {
     n: '04',
@@ -57,8 +57,8 @@ const FEATURES = [
   },
   {
     n: '05',
-    title: '위험 신호 알림',
-    desc: '위험 수준에 도달하면 브라우저 알림으로 부드럽게 알립니다. 24시간 상담 연결도 한 번에.',
+    title: '안전판 넛지',
+    desc: '마음에 힘이 오래 들어가 있으면 살며시 쉬어가자고 — 켜고 끄고 빈도까지 내가 정해요. 24시간 상담 연결도 한 번에.',
   },
   {
     n: '06',
@@ -71,11 +71,11 @@ export default function LandingFeatures() {
   return (
     <section
       id="features"
-      className="border-t border-white/[0.06] px-[52px] py-[120px]"
+      className="border-t border-ink-200 px-[52px] py-[120px]"
     >
       <div className="mx-auto grid max-w-[1100px] grid-cols-1 items-start gap-[100px] md:grid-cols-2">
         <div className="md:sticky md:top-[120px]">
-          <p className="r mb-5 flex items-center gap-[10px] text-[10px] font-light uppercase tracking-[0.18em] text-[rgba(240,237,230,0.38)] before:block before:h-px before:w-5 before:bg-[rgba(240,237,230,0.38)] before:content-['']">
+          <p className="r mb-5 flex items-center gap-[10px] text-[10px] font-light uppercase tracking-[0.18em] text-ink-400 before:block before:h-px before:w-5 before:bg-ink-300 before:content-['']">
             Features
           </p>
           <h2
@@ -94,9 +94,9 @@ export default function LandingFeatures() {
               className="h-[220px] w-[220px] rounded-full"
               style={{
                 background:
-                  'radial-gradient(circle at 35% 35%, rgba(190,225,210,0.92) 0%, rgba(140,190,175,0.85) 15%, rgba(80,140,128,0.78) 35%, rgba(30,58,52,0.88) 60%, rgba(10,22,18,0.94) 82%, rgba(4,8,6,0.98) 100%)',
+                  'radial-gradient(circle at 35% 35%, rgba(220,240,235,0.95) 0%, rgba(180,220,210,0.90) 15%, rgba(107,171,154,0.80) 40%, rgba(78,144,128,0.70) 65%, rgba(107,171,154,0.40) 85%, rgba(250,250,250,0.20) 100%)',
                 boxShadow:
-                  '0 0 60px rgba(107,171,154,0.25), inset 0 0 60px rgba(107,171,154,0.05)',
+                  '0 0 60px rgba(107,171,154,0.20), inset 0 0 40px rgba(107,171,154,0.08)',
               }}
             />
             <div className="r d2 flex w-full flex-col gap-4">
@@ -112,19 +112,19 @@ export default function LandingFeatures() {
           {FEATURES.map((f, i) => (
             <div
               key={f.n}
-              className={`r ${i > 0 && i < 4 ? `d${i}` : i === 4 ? 'd2' : i === 5 ? 'd3' : ''} group flex items-start gap-7 border-t border-white/[0.06] py-7 ${i === FEATURES.length - 1 ? 'border-b' : ''}`}
+              className={`r ${i > 0 && i < 4 ? `d${i}` : i === 4 ? 'd2' : i === 5 ? 'd3' : ''} group flex items-start gap-7 border-t border-ink-200 py-7 ${i === FEATURES.length - 1 ? 'border-b' : ''}`}
             >
-              <div className="w-7 flex-shrink-0 pt-[5px] text-[10px] tracking-[0.1em] text-[rgba(240,237,230,0.14)]">
+              <div className="w-7 flex-shrink-0 pt-[5px] text-[10px] tracking-[0.1em] text-ink-300">
                 {f.n}
               </div>
               <div className="flex-1">
                 <div
-                  className="mb-2.5 font-extralight tracking-[-0.01em] text-[rgba(240,237,230,0.65)] transition-colors duration-[250ms] group-hover:text-[#F0EDE6]"
+                  className="mb-2.5 font-extralight tracking-[-0.01em] text-ink-700 transition-colors duration-[250ms] group-hover:text-ink-900"
                   style={{ fontSize: 'clamp(17px, 2vw, 22px)' }}
                 >
                   {f.title}
                 </div>
-                <div className="max-w-[400px] text-[12px] font-light leading-[1.8] text-[rgba(240,237,230,0.38)]">
+                <div className="max-w-[400px] text-[12px] font-light leading-[1.8] text-ink-500">
                   {f.desc}
                 </div>
               </div>

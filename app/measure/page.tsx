@@ -26,7 +26,9 @@ function readOnboarded(): boolean {
 }
 
 export default function Home() {
-  const [onboarded, setOnboarded] = useState<boolean>(readOnboarded)
+  // onboarded는 localStorage 기반이라 클라이언트에서만 안다 — 첫 렌더는 미확정(null),
+  // mount 후 읽어 SSR/client 첫 렌더를 일치시킨다 (hydration mismatch 방지)
+  const [onboarded, setOnboarded] = useState<boolean | null>(null)
   const [modelStatus, setModelStatus] = useState<ModelStatus>('loading')
   const [modelError, setModelError] = useState<string | null>(null)
   const [dbReady, setDbReady] = useState(false)
@@ -35,6 +37,12 @@ export default function Home() {
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [recordCount, setRecordCount] = useState(0)
+
+  useEffect(() => {
+    // localStorage는 클라이언트에서만 — mount 후 온보딩 여부 확인 (hydration mismatch 방지)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOnboarded(readOnboarded())
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -121,6 +129,10 @@ export default function Home() {
 
   const startDisabled = active || modelStatus !== 'ready' || !dbReady
 
+  // 온보딩 확인 전(첫 렌더)엔 아무것도 그리지 않아 SSR/client 첫 렌더를 일치시킨다
+  if (onboarded === null) {
+    return null
+  }
   if (!onboarded) {
     return <OnboardingSurvey onDone={handleOnboardingDone} />
   }

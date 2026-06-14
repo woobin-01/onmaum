@@ -7,13 +7,13 @@
   --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', sans-serif;
 }
 
-/* 랜딩 페이지 다크 테마 */
+/* 랜딩 페이지 라이트 테마 */
 [data-theme="landing"] {
-  --background: #050503;
-  --foreground: #F0EDE6;
-  --landing-muted: rgba(240, 237, 230, 0.38);
-  --landing-dim: rgba(240, 237, 230, 0.14);
-  --landing-border: rgba(255, 255, 255, 0.06);
+  --background: #FAFAFA;
+  --foreground: #171717;
+  --landing-muted: rgba(23, 23, 23, 0.55);
+  --landing-dim: rgba(23, 23, 23, 0.32);
+  --landing-border: rgba(23, 23, 23, 0.08);
 }
 
 /* 스크롤 리빌 (랜딩 전용 .r 클래스) */
@@ -69,13 +69,6 @@
   --color-ink-700: #404040;
   --color-ink-800: #262626;
   --color-ink-900: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

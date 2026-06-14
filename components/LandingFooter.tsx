@@ -1,6 +1,6 @@
 export default function LandingFooter() {
   return (
-    <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.06] px-[52px] py-10 text-[11px] font-light text-[rgba(240,237,230,0.38)]">
+    <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-ink-200 px-[52px] py-10 text-[11px] font-light text-ink-400">
       <div className="flex items-center gap-2.5">
         <svg
           width="16"
@@ -20,14 +20,14 @@ export default function LandingFooter() {
         정신건강위기상담{' '}
         <a
           href="tel:1577-0199"
-          className="text-[rgba(240,237,230,0.65)] transition-colors hover:text-[#6BAB9A]"
+          className="text-ink-600 transition-colors hover:text-risk-good"
         >
           1577-0199
         </a>{' '}
         · 자살예방{' '}
         <a
           href="tel:1393"
-          className="text-[rgba(240,237,230,0.65)] transition-colors hover:text-[#6BAB9A]"
+          className="text-ink-600 transition-colors hover:text-risk-good"
         >
           1393
         </a>{' '}
