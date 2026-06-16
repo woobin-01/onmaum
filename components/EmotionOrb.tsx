@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
-import type { EmotionResult } from '@/lib/emotionAnalysis'
-import { gradientColors, topTwoEmotions } from '@/lib/orbColor'
+import { getDominantEmotion, type EmotionResult } from '@/lib/emotionAnalysis'
+import { EMOTION_SHADES } from '@/lib/orbColor'
 import { motionFor } from '@/lib/orbMotion'
 import { opacityFromCount } from '@/lib/orbStages'
 import { EMOTION_CAPTIONS, pickCaption } from '@/lib/orbCaption'
@@ -25,7 +25,7 @@ interface Props {
 
 /**
  * 감정 오브 — 엔진(orbColor/orbMotion/orbStages/orbCaption)을 소비하는
- * "또렷(crisp)" 글래스+오로라 시각 컴포넌트.
+ * "단색 심도(light→mid→dark)" 구체 시각 컴포넌트.
  */
 export default function EmotionOrb({
   emotions,
@@ -35,8 +35,8 @@ export default function EmotionOrb({
   captionTone = 'dark',
   className,
 }: Props) {
-  const { from, to } = gradientColors(emotions)
-  const [dominant] = topTwoEmotions(emotions)
+  const dominant = getDominantEmotion(emotions)
+  const shade = EMOTION_SHADES[dominant]
   const motion = motionFor(dominant)
   const opacity = opacityFromCount(recordCount)
   // SSR은 결정적 첫 변형으로(hydration mismatch 방지), 마운트 후 클라이언트에서만 랜덤 추첨.
@@ -52,8 +52,11 @@ export default function EmotionOrb({
     width: size,
     height: size,
     opacity,
-    '--from': from,
-    '--to': to,
+    '--c1': shade.c1,
+    '--c2': shade.c2,
+    '--c3': shade.c3,
+    '--glow': shade.glow,
+    '--shadow': shade.shadow,
     '--dur': `${motion.breathPeriodMs}ms`,
     '--amp': motion.breathAmp,
     '--floaty': `${motion.floatY * size}px`,
@@ -61,10 +64,9 @@ export default function EmotionOrb({
 
   return (
     <div className={[styles.wrap, className].filter(Boolean).join(' ')}>
-      <div className={styles.orb} style={orbStyle}>
-        <div className={styles.flow} />
-        <div className={styles.gloss} />
-        <div className={styles.rim} />
+      <div className={styles.orbBox} style={orbStyle}>
+        <div className={styles.glow} />
+        <div className={styles.orb} />
       </div>
       {showCaption && (
         <p

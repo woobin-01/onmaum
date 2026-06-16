@@ -1,0 +1,16 @@
+/* PIP 창 전체를 덮는 감정 워시 배경. 색(background)은 inline 동적값으로 항상 적용되고,
+   부드러운 전환만 여기서 제어 — prefers-reduced-motion 사용자는 전환을 생략한다. */
+.washBg {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 600ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .washBg {
+    transition: none;
+  }
+}

@@ -5,45 +5,40 @@
   gap: 14px;
 }
 
+/* 단색 구체 + 후광을 담는 박스 (크기·성장 opacity·CSS 변수는 인라인으로) */
+.orbBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 뒤 후광 — dominant 감정 색이 은은하게 번진다 */
+.glow {
+  position: absolute;
+  inset: -10%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow), rgba(0, 0, 0, 0) 68%);
+  transition: background 0.6s ease;
+}
+
+/* 단색 구체 — 같은 색의 light(중심)→mid→dark(가장자리) 입체 */
 .orb {
   position: relative;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  overflow: hidden;
-  background: #0a1411;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.97), rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle at 50% 50%, var(--c1) 0%, var(--c2) 52%, var(--c3) 100%);
   box-shadow:
-    0 0 44px 7px color-mix(in srgb, var(--from) 45%, transparent),
-    inset -7px -8px 16px rgba(0, 0, 0, 0.6),
-    inset 7px 7px 13px rgba(255, 255, 255, 0.16);
+    0 18px 38px -12px var(--shadow),
+    inset -10px -13px 30px rgba(0, 0, 0, 0.2),
+    inset 8px 10px 22px rgba(255, 255, 255, 0.42);
   animation: breathe var(--dur) ease-in-out infinite;
-}
-
-.flow {
-  position: absolute;
-  inset: -22%;
-  filter: blur(2px);
-  animation: swirl 18s linear infinite;
-  background:
-    radial-gradient(circle at 36% 30%, color-mix(in srgb, var(--from) 88%, white), transparent 46%),
-    radial-gradient(circle at 64% 66%, var(--to), transparent 56%),
-    radial-gradient(circle at 50% 54%, color-mix(in srgb, var(--from) 50%, black), transparent 82%);
-}
-
-.gloss {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 33% 24%, rgba(255, 255, 255, 0.9), transparent 22%),
-    radial-gradient(circle at 52% 122%, rgba(0, 0, 0, 0.5), transparent 56%);
-}
-
-.rim {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  box-shadow:
-    inset 0 0 0 1.5px rgba(225, 255, 246, 0.2),
-    inset 0 2px 10px rgba(255, 255, 255, 0.1);
+  transition:
+    background 0.6s ease,
+    box-shadow 0.6s ease;
 }
 
 .caption {
@@ -60,12 +55,6 @@
   color: rgba(230, 240, 236, 0.92);
 }
 
-@keyframes swirl {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* --amp: 호흡 진폭, --floaty: 수직 이동(px, 음수=위로 부유) */
 @keyframes breathe {
   0%,
@@ -78,8 +67,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orb,
-  .flow {
+  .orb {
     animation: none;
   }
 }

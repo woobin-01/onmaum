@@ -3,7 +3,9 @@
 import { createPortal } from 'react-dom'
 import EmotionOrb from './EmotionOrb'
 import { useOrbPip } from '@/hooks/useOrbPip'
+import { washBackground } from '@/lib/orbColor'
 import type { EmotionResult } from '@/lib/emotionAnalysis'
+import styles from './OrbPipButton.module.css'
 
 interface Props {
   emotions: EmotionResult
@@ -26,7 +28,12 @@ export default function OrbPipButton({ emotions, recordCount }: Props) {
       </button>
       {pip.container &&
         createPortal(
-          <EmotionOrb emotions={emotions} recordCount={recordCount} size={180} />,
+          // PIP 창 전체를 덮는 워시 배경 div — 감정이 바뀌면 re-render되어
+          // washBackground가 갱신되고 CSS transition으로 0.6초에 걸쳐 부드럽게 물든다.
+          // (reduced-motion 사용자는 .washBg의 media query로 전환만 생략, 색은 적용)
+          <div className={styles.washBg} style={{ background: washBackground(emotions) }}>
+            <EmotionOrb emotions={emotions} recordCount={recordCount} size={180} />
+          </div>,
           pip.container,
         )}
     </>
