@@ -28,7 +28,7 @@ export default function NudgeSettings() {
     <div className="space-y-3 rounded-2xl border border-ink-200 bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-ink-900">🌿 안전판 넛지</p>
+          <p className="text-sm font-medium text-ink-900">🌿 위험도 알림</p>
           <p className="mt-1 text-xs text-ink-500">
             마음에 힘이 오래 들어가 있으면 살며시 쉬어가자고 알려드려요
           </p>
@@ -37,17 +37,14 @@ export default function NudgeSettings() {
           type="button"
           role="switch"
           aria-checked={settings.nudge.enabled}
-          aria-label="넛지 알림"
+          aria-label="위험도 알림"
           onClick={toggle}
-          className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-            settings.nudge.enabled ? 'bg-risk-good' : 'bg-ink-300'
+          className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition-colors ${
+            settings.nudge.enabled ? 'justify-end bg-risk-good' : 'justify-start bg-ink-300'
           }`}
         >
-          <span
-            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-              settings.nudge.enabled ? 'translate-x-5' : 'translate-x-0.5'
-            }`}
-          />
+          {/* knob을 flex 자식으로 — absolute+translate 의존 제거(항상 보임). 위치는 justify로. */}
+          <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
         </button>
       </div>
 
