@@ -7,23 +7,26 @@ function img(pixels: number[], w: number, h: number) {
 }
 
 describe('toModelTensor', () => {
-  it('1×1 빨강 픽셀 → BGR 평면·정규화 값', () => {
+  it('1×1 빨강 픽셀 → RGB 평면·정규화 값', () => {
     // R=255,G=0,B=0,A=255
     const t = toModelTensor(img([255, 0, 0, 255], 1, 1))
     expect(t.length).toBe(3) // n=1, 3채널
-    expect(t[0]).toBeCloseTo((0 - MEAN[0]) / STD[0]) // B plane
+    // 평면 순서 R,G,B / 값 = (c/255 - mean)/std (mean/std 인덱스 0→R,1→G,2→B)
+    expect(t[0]).toBeCloseTo((1 - MEAN[0]) / STD[0]) // R plane
     expect(t[1]).toBeCloseTo((0 - MEAN[1]) / STD[1]) // G plane
-    expect(t[2]).toBeCloseTo((1 - MEAN[2]) / STD[2]) // R plane
+    expect(t[2]).toBeCloseTo((0 - MEAN[2]) / STD[2]) // B plane
   })
 
-  it('NCHW 평면 레이아웃(2픽셀): [B0,B1, G0,G1, R0,R1]', () => {
+  it('NCHW 평면 레이아웃(2픽셀): [R0,R1, G0,G1, B0,B1]', () => {
     // px0 = (255,0,0), px1 = (0,0,255)
     const t = toModelTensor(img([255, 0, 0, 255, 0, 0, 255, 255], 2, 1))
     const n = 2
-    expect(t[0]).toBeCloseTo((0 - MEAN[0]) / STD[0]) // B plane px0
-    expect(t[1]).toBeCloseTo((1 - MEAN[0]) / STD[0]) // B plane px1
-    expect(t[2 * n + 0]).toBeCloseTo((1 - MEAN[2]) / STD[2]) // R plane px0
-    expect(t[2 * n + 1]).toBeCloseTo((0 - MEAN[2]) / STD[2]) // R plane px1
+    // R plane: px0 R=255, px1 R=0
+    expect(t[0]).toBeCloseTo((1 - MEAN[0]) / STD[0])
+    expect(t[1]).toBeCloseTo((0 - MEAN[0]) / STD[0])
+    // B plane: px0 B=0, px1 B=255
+    expect(t[2 * n + 0]).toBeCloseTo((0 - MEAN[2]) / STD[2])
+    expect(t[2 * n + 1]).toBeCloseTo((1 - MEAN[2]) / STD[2])
   })
 
   it('상수', () => {
