@@ -7,6 +7,7 @@ import EmotionOrb from '@/components/EmotionOrb'
 import OrbPipButton from '@/components/OrbPipButton'
 import OnboardingSurvey from '@/components/OnboardingSurvey'
 import { useEmotionRecorder } from '@/hooks/useEmotionRecorder'
+import { useSmoothedEmotion } from '@/hooks/useSmoothedEmotion'
 import { loadEmotionModels, type EmotionResult } from '@/lib/emotionAnalysis'
 import { db } from '@/lib/db'
 
@@ -95,6 +96,8 @@ export default function Home() {
     active,
     videoEl,
   })
+  // 오브는 raw 프레임값(0.5초마다 홱홱) 대신 median→EMA로 부드럽게 만든 값을 받는다.
+  const orbEmotion = useSmoothedEmotion(currentEmotion)
 
   const handleOnboardingDone = useCallback(() => {
     try {
@@ -147,11 +150,11 @@ export default function Home() {
 
         <div className="flex flex-col items-center gap-4">
           <EmotionOrb
-            emotions={currentEmotion ?? CALM_FALLBACK}
+            emotions={orbEmotion ?? CALM_FALLBACK}
             recordCount={recordCount}
             size={150}
           />
-          <OrbPipButton emotions={currentEmotion ?? CALM_FALLBACK} recordCount={recordCount} />
+          <OrbPipButton emotions={orbEmotion ?? CALM_FALLBACK} recordCount={recordCount} />
         </div>
 
         {modelStatus === 'loading' && (
