@@ -36,7 +36,8 @@ const OPACITY_FULL_COUNT = 31
 const OPACITY_CURVE_DENOMINATOR = Math.log(36)
 
 export function opacityFromCount(count: number): number {
-  if (count <= 0) return 0.15
+  // 새 계정(0건)도 또렷하게 보이도록 floor를 0.55로. 쓸수록 1.0까지 성장(span 0.45).
+  if (count <= 0) return 0.55
   if (count >= OPACITY_FULL_COUNT) return 1
-  return 0.15 + 0.85 * (Math.log(count + 1) / OPACITY_CURVE_DENOMINATOR)
+  return 0.55 + 0.45 * (Math.log(count + 1) / OPACITY_CURVE_DENOMINATOR)
 }

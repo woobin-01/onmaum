@@ -27,9 +27,9 @@ describe('orbStages', () => {
     expect(stageFromCount(-1)).toBe('empty')
   })
   it('누적량 → 투명도(로그)', () => {
-    expect(opacityFromCount(0)).toBeCloseTo(0.15)
+    expect(opacityFromCount(0)).toBeCloseTo(0.55)
     expect(opacityFromCount(31)).toBeCloseTo(1.0)
     expect(opacityFromCount(9999)).toBe(1)
-    expect(opacityFromCount(-5)).toBeCloseTo(0.15)
+    expect(opacityFromCount(-5)).toBeCloseTo(0.55)
   })
 })
