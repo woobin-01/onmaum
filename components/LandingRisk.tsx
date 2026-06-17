@@ -18,9 +18,9 @@ const RISKS = [
   {
     color: '#E8806A',
     glow: 'rgba(232,128,106,0.4)',
-    name: '안전판',
-    desc: '오래 무거우면 살며시 넛지',
-    label: 'Nudge',
+    name: '위험도 알림',
+    desc: '오래 무거우면 살며시 알림',
+    label: 'Alert',
   },
 ] as const
 
@@ -44,9 +44,9 @@ export default function LandingRisk() {
             곁에서 비춰요
           </h2>
           <p className="r d2 max-w-[380px] text-[13px] font-light leading-[1.8] text-ink-500">
-            긍정과 스트레스를 2축으로 재서, 단정하지 않고 오브의 색과
+            긍정과 스트레스를 따로 재서, 단정하지 않고 오브의 색과
             숨결로 비춰요. 평소보다 오래 무거우면 — 강요 없이 — 살며시
-            쉬어가자고 넛지해요.
+            쉬어가자고 알려드려요.
           </p>
         </div>
 
