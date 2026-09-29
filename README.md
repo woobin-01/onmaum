@@ -1,199 +1,104 @@
 # 온마음 (ONMAUM)
 
-얼굴 표정으로 일별 마음 상태를 살펴보는 웹앱. 감정 노동자가 자신의 표정 변화를 모니터링하고 위험 신호를 일찍 알아차릴 수 있도록 돕는 도구.
+콜센터 등 감정노동자가 웹캠 표정으로 자기 마음 상태를 기록하는, 프라이버시 우선 웹앱입니다.
 
-**모든 데이터는 사용자 디바이스에만 저장됩니다.** 서버 없이 브라우저 IndexedDB로만 동작 (프라이버시 우선).
+서버·계정 없이 브라우저에서만 동작하며, 기록은 기기 안(IndexedDB·localStorage)에만 남습니다. 의료 진단이 아니라 자기 인식을 돕는 도구입니다.
 
-## 주요 기능
+## 왜 만들었나
 
-- 📷 **실시간 감정 분석** — 웹캠으로 표정을 감지하여 4가지 감정(기쁨/평온/슬픔/화남) 확률 표시
-- 💾 **1분 단위 자동 저장** — IndexedDB에 누적 (오프라인 가능)
-- 📊 **일별 위험도 + 7일 추세** — 부정 비율과 평탄 정서 기반 자동 계산
-- 🌿 **자기 돌봄 팁** — 일상에서 할 수 있는 작은 돌봄 권유
-- 🔔 **위험 신호 모달 + 알림** — 위험 상태일 때 부드러운 권유 + 정신건강 hotline (1577-0199, 1393)
-- 📱 **PWA** — 홈 화면에 설치, 오프라인에서도 동작
+감정노동자는 업무 중 표정을 관리하기 때문에, 본인도 자신의 부담을 놓치기 쉽습니다. 온마음은 **본인만** 보는 기록으로 “오늘은 평소보다 얼마나 힘들었는지”를 보여 주는 게 목표입니다. 데이터는 서버로 올리지 않고, 회사 대시보드용 모니터링이 아닙니다. **의료기기가 아닙니다.**
 
-## 기술 스택
+## 하는 일
 
-- **Next.js 16** (App Router) + **React 19** + **TypeScript**
-- **Tailwind CSS v4** (디자인 토큰)
-- **face-api.js** (SSD MobileNet + Face Landmark 68 + Face Expression)
-- **Dexie 4** + **dexie-react-hooks** (IndexedDB)
-- **Recharts** (추세 그래프)
-- **Vitest** + **happy-dom** + **fake-indexeddb** (테스트)
+통화나 업무 중 전면 카메라로 표정을 읽고, 4가지 감정(기쁨·평온·슬픔·화남) 분포를 1분 단위로 모읍니다. 하루 동안의 긍정 지수와 스트레스 지수를 보여 주고, 최근 14일 개인 기준선과 비교한 “평소 대비” 상태를 표시합니다. 푸터에 상담 전화(1577-0199, 1393)를 둡니다.
 
-## 로컬 실행
+측정은 **전화 시작**을 누른 동안에만 돌아갑니다. 탭을 내리거나 백그라운드로 두면 브라우저 제약으로 측정이 느려지거나 멈출 수 있습니다.
+
+## 화면별 요약
+
+| 경로 | 하는 일 |
+|---|---|
+| `/` | 소개 랜딩, 첫 측정 전 4단계 설문 |
+| `/measure` | 웹캠 측정, 실시간 오브·감정 막대, 전화 시작/종료 |
+| `/stats` | 오늘 리포트 — 긍정/스트레스 2축, 기준선, 차트 |
+| `/demo`, `/orb-preview` | 개발·미리보기용 (일반 사용 경로 아님) |
+
+## 주요 기능 (현재)
+
+- **측정** — 웹캠 표정 분석, 1분 자동 저장
+- **오늘 리포트** — 긍정/스트레스 2축, 14일 개인 기준선
+- **체크인 보정** — 오전·오후 자기보고로 스트레스 표시를 소폭 조정
+- **옵트인 넛지** — 기본 꺼짐. 권한 허용 시 인앱 배너·브라우저 알림
+- **Document PiP 오브** — Chrome/Edge 등 지원 시 작은 오브 창 (분석 루프는 원래 탭에 남음)
+- **PWA** — 홈 화면 설치, `public/models/`에서 얼굴 인식 모델 서빙
+- **상담 전화 안내** — 1577-0199, 1393
+
+## 실행 방법
 
 ```bash
 npm install
-npm run dev
+npm run dev          # http://localhost:3000
+npm run test:run     # 단발 테스트
+npm run build && npm start
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000) 접속.
+환경 변수는 없습니다. 카메라는 HTTPS(또는 localhost)와 권한 허용이 필요합니다. 얼굴 인식 가중치는 `public/models/`에서 서빙되며 합계는 약 6.5MB입니다.
 
-### 처음 실행 시
-- face-api.js 모델 약 5.4MB 자동 다운로드 (`public/models/`에서 정적 서빙)
-- 카메라 권한 요청 → 허용 필요 (얼굴 분석은 모두 브라우저 내에서 처리)
+테스트 (최근 확인 기준): 파일 30개, **139 passed / 4 skipped**. 레코더 통합 테스트 일부는 아직 `skip`입니다.
 
-### 페이지 구조
-- `/` — 측정 (카메라 + 실시간 감정 표시)
-- `/stats` — 통계 + 자기 돌봄 (일별 위험도, 7일 추세, 최근 기록, 알림 토글)
+배포 예: [https://onmaum.vercel.app](https://onmaum.vercel.app) (Vercel). 별도 서버·API 키 없음.
 
-## 테스트
+## 기술 스택
 
-```bash
-npm run test          # watch 모드
-npm run test:run      # 단발 실행 (CI)
-npm run test:ui       # 브라우저 UI
-```
+| 구분 | 내용 |
+|---|---|
+| 앱 | Next.js 16 (App Router), React 19, TypeScript |
+| UI | Tailwind CSS v4, Pretendard |
+| 얼굴 인식 | face-api.js (SSD MobileNet + Landmark 68 + Expression) |
+| 저장 | Dexie (IndexedDB), localStorage (프로필·설정) |
+| 차트 | Recharts |
+| 테스트 | Vitest, happy-dom, fake-indexeddb |
 
-현재 테스트: **75 passed + 4 skipped**
-- `lib/`: aggregator (12), repository (6), riskCalculator (15), selfCareTips (5)
-- `hooks/`: useEmotionRecorder (1 + 4 skip), useWarningDismissal (6), useNotificationPermission (6), useRiskNotification (6)
-- `components/`: RiskWarningModal (6), ContactsFooter (3), SelfCareTip (3), NotificationToggle (6)
-
-## Production Build
-
-```bash
-npm run build
-npm start
-```
-
-`/`, `/stats`가 static prerendered되어 정적 호스팅 가능.
-
-## Vercel 배포
-
-이 프로젝트는 별도 환경변수나 서버 의존성이 없어서 **Vercel에 그대로 배포**할 수 있습니다.
-
-### 1. GitHub에 푸시
-
-```bash
-# 최초 1회: GitHub에 빈 레포 생성 후
-git remote add origin https://github.com/<사용자명>/onmaum.git
-git branch -M main
-git push -u origin main
-```
-
-### 2. Vercel 연결 (둘 중 한 가지)
-
-**A. Vercel 대시보드 (권장)**
-1. [vercel.com/new](https://vercel.com/new) 접속
-2. GitHub 레포 선택 → Import
-3. Framework: **Next.js** 자동 감지
-4. Build/Output 설정 그대로 → **Deploy**
-5. 약 2분 후 배포 완료, `https://<프로젝트>.vercel.app` 자동 발급
-
-**B. Vercel CLI**
-```bash
-npm install -g vercel
-vercel              # 첫 실행 시 로그인 + 프로젝트 연결
-vercel --prod       # production 배포
-```
-
-### 3. 배포 후 확인 사항
-- 카메라 권한: **HTTPS 필수** (Vercel은 자동 HTTPS)
-- PWA 설치 가능: 모바일/데스크톱 브라우저에서 "홈 화면에 추가"
-- Service Worker 캐싱: 두 번째 진입부터 face-api 모델 즉시 로드
-- 알림 권한: HTTPS에서만 동작 (자동 만족)
-
-### 4. 환경변수
-**없음.** 모든 처리는 클라이언트 사이드. 외부 API 키나 시크릿 불필요.
-
-## 프로젝트 구조
+## 폴더 구조 요약
 
 ```
-app/
-  layout.tsx           Navigation + ContactsFooter + SW 등록
-  page.tsx             /        측정 페이지
-  stats/
-    page.tsx           /stats   통계 + 돌봄 페이지
-  globals.css          Tailwind v4 @theme + Pretendard
-
-components/
-  Navigation.tsx           상단 탭 (측정/통계)
-  CameraView.tsx           웹캠 미리보기 + stream 관리
-  EmotionDisplay.tsx       실시간 감정 막대 + dominant
-  DailyRiskCard.tsx        오늘 위험도 큰 카드 (양호/주의/위험)
-  TrendChart.tsx           최근 7일 막대 그래프 (recharts)
-  RecentRecords.tsx        최근 5개 record 리스트
-  SelfCareTip.tsx          자기 돌봄 한 줄 카드 (회전)
-  RiskWarningModal.tsx     warning 시 자동 모달 + hotline
-  ContactsFooter.tsx       페이지 푸터 (1577-0199 + 1393)
-  NotificationToggle.tsx   브라우저 알림 토글
-  ServiceWorkerRegistrar.tsx  SW 클라이언트 등록
-
-hooks/
-  useEmotionRecorder.ts        분석 루프 + 1분 buffer + 자동 저장
-  useWarningDismissal.ts       sessionStorage로 모달 dismiss 추적
-  useNotificationPermission.ts 알림 권한 상태 + request
-  useRiskNotification.ts       warning 진입 시 알림 표시
-
-lib/
-  emotionAnalysis.ts       face-api 모델 로드 + 분석 + dominant
-  emotionAggregator.ts     500ms 샘플 → 1분 record 집계 (순수 함수)
-  emotionRepository.ts     EmotionRecord CRUD (Dexie)
-  db.ts                    Dexie 인스턴스 + 스키마
-  riskCalculator.ts        DailyRisk 계산 (negativeRatio + flatAffectAvg)
-  selfCareTips.ts          자기 돌봄 팁 정적 리스트 + 랜덤 select
-
-public/
-  models/              face-api 모델 6개 (5.4MB)
-  manifest.json        PWA 메타
-  icon.svg             앱 아이콘
-  sw.js                Service Worker
-
-docs/superpowers/
-  specs/               설계 스펙 (Step 3, 6)
-  plans/               implementation plan (Step 3, 6)
+app/            라우트 — /, /measure, /stats, /demo, /orb-preview
+components/     랜딩·카메라·오브·통계·푸터 등 화면
+hooks/          감정 루프, 체크인, 넛지, PiP
+lib/            감정 분석·집계, Dexie, 기준선·보정·제안
+public/         PWA(manifest, sw.js), face-api 모델
+tests/          Vitest
+docs/           설계 스펙·구현 계획 (참고용)
 ```
 
-## 데이터 모델 요약
+데이터 흐름: `CameraView` → `useEmotionRecorder`(약 0.5초 분석) → 1분 `aggregate` → Dexie `emotions` → `/stats`에서 스트레스·기준선·보정 후 리포트.
 
-```typescript
-type Emotion = 'happy' | 'calm' | 'sad' | 'angry'
-type RiskLevel = 'good' | 'caution' | 'warning'
+설계 세부(알고리즘, Electron 창 구조 등)는 `docs/`를 보세요. README는 “무엇이 실제로 돌아가는지”만 적습니다.
 
-interface EmotionRecord {        // 1분 단위 집계
-  id: number
-  timestamp: Date
-  duration: number               // 실제 얼굴 감지된 ms
-  detectionRate: number          // 0~1
-  happy/calm/sad/angry: number   // 평균 확률
-  dominantEmotion: Emotion
-  flatAffectScore: number        // 1 - (dominant 변화 / (감지샘플 - 1))
-}
+## 한계와 주의
 
-interface DailyRisk {            // 그날 record들의 집계 (lazy 계산)
-  date: string                   // YYYY-MM-DD
-  riskLevel: RiskLevel
-  negativeRatio: number          // sad + angry × 1.5 (가중)
-  flatAffectAvg: number
-}
-```
+- **의료기기가 아닙니다.** 진단·치료 목적이 아니며, 자기 인식 보조에 가깝습니다. 도움이 필요하면 정신건강위기상담전화 **1577-0199**, 자살예방상담전화 **1393**(24시간)을 이용해 주세요.
+- 표정만으로 마음 상태를 추정합니다. 조명, 각도, 말하기, 미검출 구간에 따라 값이 흔들릴 수 있습니다. 감정노동자가 업무 중 표정을 관리하면 부담이 과소평가될 수 있습니다.
+- 기록은 암호화·잠금 없이 브라우저 저장소에만 있습니다. 공용 PC에서는 OS 계정 분리가 사실상 경계입니다.
+- 백그라운드·다른 탭에서는 측정이 보장되지 않습니다. PiP는 오브만 띄우고, 분석 루프는 원래 탭에 남습니다.
 
-## 위험도 계산 로직
+## 로드맵 (계획 · 미구현)
 
-```
-사용 record:  duration ≥ 10초인 record만 (노이즈 필터)
-가중 평균:    duration 비례
-negativeRatio = Σ((sad + angry × 1.5) × duration) / Σ(duration)
-flatAffectAvg = Σ(flatAffectScore × duration) / Σ(duration)
+아직 코드에 없거나 방향만 정한 항목입니다. 기대한 기능처럼 쓰지 마세요.
 
-riskLevel:
-  good      negativeRatio < 0.3 AND flatAffectAvg < 0.85
-  warning   negativeRatio ≥ 0.5 OR flatAffectAvg ≥ 0.95
-  caution   그 외
-```
+### 다음에 손댈 순서
 
-화남(angry) 가중치 1.5는 face-api 표정 모델의 angry 인식률이 약하다는 점을 보정하기 위함.
+1. **통화 단위 기록 (확정)** — “전화 시작~종료”를 한 세션으로 묶어 통화별 요약·당일 피로 시작 시점 표시
+2. **Electron 숨김 측정 실험 (선행)** — Windows에서 창을 내려도 카메라 측정이 이어지는지 확인. 실패하면 PC 전환 전제를 다시 검토
+3. **UI 선택** — 통화 후 체크인 시트 + 통화 카드 타임라인을 기본으로, 오브/가장자리 빛/트레이는 선택 모드로 검토
 
-## 안전 안내
+### 그다음 검토
 
-이 앱은 의료기기가 아닙니다. 위험 신호는 자기 인식 보조 도구일 뿐, 진단/치료 목적이 아닙니다. 도움이 필요한 경우:
-
-- **정신건강위기상담전화 1577-0199** (24시간)
-- **자살예방상담전화 1393** (24시간)
+- **Electron PC 프로그램 · 항상 위 오브 (방향)** — 웹 PWA 대신 Windows 우선 데스크톱
+- **바우처 안내 (계획)** — 정신건강 심리상담 바우처사업 등 공식 안내·링크
+- **카메라 심박(rPPG) (참고용 추세)** — 제품 핵심이 아니라 참고용. 통화 중 HRV는 신뢰도 낮음
+- **음성 (계획)** — 개인용은 본인 운율만, 회사 도입 시에만 고객 음성·STT 확장 검토
 
 ## 라이선스
 
-내부 학습/팀 프로젝트 — 별도 라이선스 미지정.
+내부 학습·팀 프로젝트. 별도 라이선스 미지정.
