@@ -7,6 +7,7 @@
 ## 방향
 
 자세한 방향은 [docs/roadmap.md](docs/roadmap.md)에 있습니다.
+1학기 정리: [docs/2026-1학기-정리.md](docs/2026-1학기-정리.md)
 
 1. 카메라 기반 인식 고도화 — DeepMedi류 rPPG/심박 참고, 웹캠 신호 안정화
 2. Electron — 브라우저 PWA 대신 PC 앱, 백그라운드(숨김 창)에서도 측정 가능
