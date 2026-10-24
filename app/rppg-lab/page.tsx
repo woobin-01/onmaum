@@ -1,14 +1,18 @@
 'use client'
 
 // rPPG spike 실험 페이지 (메뉴 미노출, 검증 후 폐기 예정).
-// 웹캠 → face-api 랜드마크(현행 부하 그대로: SSD+랜드마크+표정) → 이마/이마+볼 ROI 피부 평균 RGB(매 프레임)
-// → POS 심박 추정을 1초마다. 옆 사람이 스마트워치 BPM을 입력하면 앱 추정과 짝지어 조건별 오차를 낸다.
+// 추정기 3종을 같은 영상에서 나란히 비교한다:
+//  - POS 이마 / POS 이마+볼: face-api 랜드마크(현행 부하 그대로: SSD+랜드마크+표정) ROI 피부 평균 RGB → POS
+//  - ME-rPPG: BlazeFace(매 프레임) 얼굴 박스 → 36×36 → 워커에서 ONNX 추론 → 맥박 파형 → BPM
+// 옆 사람이 스마트워치(또는 손가락 앱) BPM을 입력하면 앱 추정과 짝지어 조건별 오차를 낸다.
 
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import * as faceapi from 'face-api.js'
+import type { FaceDetector } from '@mediapipe/tasks-vision'
 import { loadFaceApiModels } from '@/lib/emotionAnalysis'
 import {
   estimateHeartRate,
+  heartRateFromBvp,
   meanSkinRgb,
   roiRects,
   summarizePairs,
@@ -17,7 +21,17 @@ import {
   type PairRow,
   type Rect,
   type RgbSample,
+  type RoiSet,
 } from '@/lib/rppg'
+import {
+  clampCrop,
+  createKalman1D,
+  expandFaceBox,
+  rgbaToModelInput,
+  type FaceBox,
+  type Kalman1D,
+} from '@/lib/meRppg'
+import type { MeWorkerIn, MeWorkerOut } from './meRppg.worker'
 
 const WINDOW_MS = 10_000
 const BUFFER_MS = 12_000
@@ -25,6 +39,10 @@ const STALE_MS = 2_000
 const MIN_SKIN_RATIO = 0.3
 const ROI_EMA = 0.5
 const ROWS_KEY = 'onmaum_rppg_lab_rows'
+/** ME-rPPG: 처음 출력 30개는 버림 (데모와 동일 워밍업) */
+const ME_WARMUP = 30
+/** 워커에 쌓인 프레임이 이만큼이면 새 프레임은 건너뜀 (데모와 동일) */
+const ME_MAX_IN_FLIGHT = 5
 
 const DETECTOR_OPTIONS = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
 
@@ -33,6 +51,10 @@ const CONDITIONS: { key: Condition; label: string; target: number | null }[] = [
   { key: 'talk', label: '말하며', target: 8 },
   { key: 'move', label: '움직이며', target: null },
 ]
+
+const ROI_LABELS: Record<RoiSet, string> = { forehead: 'POS 이마', all: 'POS 이마+볼', me: 'ME-rPPG' }
+
+type MeStatus = 'loading' | 'ready' | 'error'
 
 interface Rois {
   forehead: Rect
@@ -43,6 +65,8 @@ interface Rois {
 interface Live {
   forehead: HeartRate | null
   all: HeartRate | null
+  me: HeartRate | null
+  meLatency: number
   fps: number
   skin: number
   face: boolean
@@ -50,7 +74,7 @@ interface Live {
 
 type LabRow = PairRow & { t: number; fps: number }
 
-const EMPTY_LIVE: Live = { forehead: null, all: null, fps: 0, skin: 0, face: false }
+const EMPTY_LIVE: Live = { forehead: null, all: null, me: null, meLatency: 0, fps: 0, skin: 0, face: false }
 
 function smoothRect(prev: Rect, next: Rect): Rect {
   const mix = (a: number, b: number) => a + ROI_EMA * (b - a)
@@ -79,7 +103,7 @@ function fmt(v: number | null | undefined, digits = 1): string {
 }
 
 function toCsv(rows: LabRow[]): string {
-  const head = 't_s,condition,watch_bpm,forehead_bpm,forehead_snr_db,all_bpm,all_snr_db,fps'
+  const head = 't_s,condition,watch_bpm,forehead_bpm,forehead_snr_db,all_bpm,all_snr_db,me_bpm,me_snr_db,fps'
   const lines = rows.map((r) =>
     [
       r.t.toFixed(1),
@@ -89,10 +113,50 @@ function toCsv(rows: LabRow[]): string {
       fmt(r.forehead?.snrDb),
       fmt(r.all?.bpm),
       fmt(r.all?.snrDb),
+      fmt(r.me?.bpm),
+      fmt(r.me?.snrDb),
       r.fps.toFixed(0),
     ].join(','),
   )
   return [head, ...lines].join('\n')
+}
+
+/**
+ * MediaPipe(TFLite) WASM은 "INFO: Created TensorFlow Lite XNNPACK delegate" 같은 정보성 로그를
+ * console.error로 찍어 Next 개발 오버레이에 '이슈'로 뜬다 → 'INFO:'로 시작하는 것만 걸러낸다.
+ * WASM 모듈이 로드 시점의 console.error를 붙잡으므로 BlazeFace 로드 전에 한 번 설치.
+ */
+let mediapipeInfoFiltered = false
+function filterMediapipeInfoLogs() {
+  if (mediapipeInfoFiltered) return
+  mediapipeInfoFiltered = true
+  const original = console.error
+  console.error = (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && args[0].startsWith('INFO:')) return
+    original(...args)
+  }
+}
+
+/** BlazeFace(MediaPipe) — 메인 스레드 전용. WASM 인스턴스를 측정마다 새로 만들면 close() 후에도
+ *  메모리가 반납되지 않아(시작/정지 1회당 약 20MB 증가) 페이지에서 한 번만 만들어 재사용한다. */
+let blazePromise: Promise<FaceDetector> | null = null
+function getBlazeFace(): Promise<FaceDetector> {
+  blazePromise ??= createBlazeFace().catch((err: unknown) => {
+    blazePromise = null
+    throw err
+  })
+  return blazePromise
+}
+
+async function createBlazeFace(): Promise<FaceDetector> {
+  filterMediapipeInfoLogs()
+  const { FaceDetector, FilesetResolver } = await import('@mediapipe/tasks-vision')
+  const vision = await FilesetResolver.forVisionTasks('/vendor/mediapipe')
+  return FaceDetector.createFromOptions(vision, {
+    baseOptions: { modelAssetPath: '/models/blazeface/blaze_face_short_range.tflite', delegate: 'CPU' },
+    runningMode: 'VIDEO',
+    minDetectionConfidence: 0.5,
+  })
 }
 
 export default function RppgLabPage() {
@@ -103,6 +167,8 @@ export default function RppgLabPage() {
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [detectMs, setDetectMs] = useState(500)
+  const [meEnabled, setMeEnabled] = useState(true)
+  const [meStatus, setMeStatus] = useState<MeStatus>('loading')
   const [condition, setCondition] = useState<Condition>('quiet')
   const [conditionStart, setConditionStart] = useState(0)
   const [clock, setClock] = useState(0)
@@ -176,10 +242,63 @@ export default function RppgLabPage() {
     const buffers: { forehead: RgbSample[]; all: RgbSample[] } = { forehead: [], all: [] }
     const frameWalls: number[] = []
 
+    // ── ME-rPPG ──
+    let worker: Worker | null = null
+    let blaze: FaceDetector | null = null
+    let meReady = false
+    let meInFlight = 0
+    let meOutputs = 0
+    let meBox: FaceBox | null = null
+    let meKalman: Kalman1D[] | null = null
+    let meLastSendT: number | null = null
+    let meLastPushWall = 0
+    const meBuffer: { t: number; v: number }[] = []
+    const meLatencies: number[] = []
+
+    if (meEnabled) {
+      worker = new Worker(new URL('./meRppg.worker.ts', import.meta.url), { type: 'module' })
+      worker.onmessage = (e: MessageEvent<MeWorkerOut>) => {
+        const m = e.data
+        if (m.type === 'ready') {
+          meReady = true
+          if (blaze) setMeStatus('ready')
+        } else if (m.type === 'error') {
+          setMeStatus('error')
+          setError(m.message)
+        } else {
+          meInFlight--
+          meOutputs++
+          meLatencies.push(m.latency)
+          if (meLatencies.length > 60) meLatencies.shift()
+          if (meOutputs <= ME_WARMUP) return
+          meBuffer.push({ t: m.t, v: m.value })
+          while (meBuffer.length > 0 && meBuffer[0].t < m.t - BUFFER_MS) meBuffer.shift()
+          meLastPushWall = performance.now()
+        }
+      }
+      getBlazeFace()
+        .then((d) => {
+          if (stopped) return
+          blaze = d
+          if (meReady) setMeStatus('ready')
+        })
+        .catch((err: unknown) => {
+          setMeStatus('error')
+          setError(`BlazeFace 로드 실패: ${err instanceof Error ? err.message : String(err)}`)
+        })
+    }
+
     const drawOverlay = () => {
       const octx = overlay.getContext('2d')
       if (!octx) return
       octx.clearRect(0, 0, overlay.width, overlay.height)
+      if (meBox) {
+        octx.setLineDash([8, 6])
+        octx.lineWidth = 2
+        octx.strokeStyle = '#737373'
+        octx.strokeRect(meBox.originX, meBox.originY, meBox.width, meBox.height)
+        octx.setLineDash([])
+      }
       if (!rois) return
       octx.lineWidth = 3
       octx.strokeStyle = '#6BAB9A'
@@ -210,10 +329,16 @@ export default function RppgLabPage() {
       canvas.width = w
       canvas.height = h
       const ctx = canvas.getContext('2d', { willReadFrequently: true })
-      if (!ctx) throw new Error('캔버스를 만들 수 없어요')
+      const crop = document.createElement('canvas')
+      crop.width = 36
+      crop.height = 36
+      const cropCtx = crop.getContext('2d', { willReadFrequently: true })
+      if (!ctx || !cropCtx) throw new Error('캔버스를 만들 수 없어요')
+      cropCtx.imageSmoothingEnabled = true
+      cropCtx.imageSmoothingQuality = 'high'
       startRef.current = performance.now()
 
-      // 얼굴 위치: face-api (현행 측정과 같은 부하)
+      // POS용 얼굴 위치: face-api (현행 측정과 같은 부하)
       const detectLoop = async () => {
         while (!stopped) {
           try {
@@ -236,7 +361,6 @@ export default function RppgLabPage() {
               rois = null
               face = false
             }
-            drawOverlay()
           } catch (err) {
             console.error('얼굴 검출 실패:', err)
           }
@@ -244,34 +368,69 @@ export default function RppgLabPage() {
         }
       }
 
-      // 피부색: 매 프레임
+      // ME-rPPG: BlazeFace 박스 → 칼만 → 높이 1.2배·위로 20% → 36×36 → 워커
+      const sendMeFrame = (now: number, t: number) => {
+        if (!worker || !blaze || !meReady || meInFlight >= ME_MAX_IN_FLIGHT) return
+        const det = blaze.detectForVideo(video, now).detections[0]?.boundingBox
+        if (!det) {
+          meBox = null
+          return
+        }
+        if (!meKalman) {
+          meKalman = [det.originX, det.originY, det.width, det.height].map((v) => createKalman1D(1e-2, 5e-1, v, 1))
+        }
+        const [kx, ky, kw, kh] = meKalman
+        const box = expandFaceBox({
+          originX: kx.update(det.originX),
+          originY: ky.update(det.originY),
+          width: kw.update(det.width),
+          height: kh.update(det.height),
+        })
+        meBox = box
+        const c = clampCrop(box, w, h)
+        if (!c) return
+        cropCtx.drawImage(canvas, c.sx, c.sy, c.sw, c.sh, 0, 0, 36, 36)
+        const input = rgbaToModelInput(cropCtx.getImageData(0, 0, 36, 36).data)
+        // 얼굴을 2초 넘게 놓쳤다 돌아오면 파형 버퍼를 비움 (끊긴 구간을 이어 붙여 보간하지 않게)
+        if (meLastSendT !== null && t - meLastSendT > STALE_MS) meBuffer.length = 0
+        meLastSendT = t
+        meInFlight++
+        const msg: MeWorkerIn = { type: 'frame', input, t }
+        worker.postMessage(msg, [input.buffer])
+      }
+
+      // 매 프레임: 원본을 한 번 그려서 POS ROI 샘플링 + ME-rPPG 입력에 같이 씀
       let lastT = -1
       const onFrame = (now: DOMHighResTimeStamp, meta: VideoFrameCallbackMetadata) => {
         if (stopped) return
         const t = meta.captureTime ?? now
-        if (rois && t !== lastT) {
+        if (t !== lastT) {
           lastT = t
           ctx.drawImage(video, 0, 0, w, h)
-          const f = sampleRoi(ctx, rois.forehead, w, h)
-          const parts = [f, sampleRoi(ctx, rois.leftCheek, w, h), sampleRoi(ctx, rois.rightCheek, w, h)].filter(
-            (p): p is NonNullable<typeof p> => p !== null,
-          )
-          if (f) buffers.forehead.push({ t, r: f.r, g: f.g, b: f.b })
-          if (parts.length > 0) {
-            const total = parts.reduce((s, p) => s + p.count, 0)
-            buffers.all.push({
-              t,
-              r: parts.reduce((s, p) => s + p.r * p.count, 0) / total,
-              g: parts.reduce((s, p) => s + p.g * p.count, 0) / total,
-              b: parts.reduce((s, p) => s + p.b * p.count, 0) / total,
-            })
-            lastPushWall = now
+          if (rois) {
+            const f = sampleRoi(ctx, rois.forehead, w, h)
+            const parts = [f, sampleRoi(ctx, rois.leftCheek, w, h), sampleRoi(ctx, rois.rightCheek, w, h)].filter(
+              (p): p is NonNullable<typeof p> => p !== null,
+            )
+            if (f) buffers.forehead.push({ t, r: f.r, g: f.g, b: f.b })
+            if (parts.length > 0) {
+              const total = parts.reduce((s, p) => s + p.count, 0)
+              buffers.all.push({
+                t,
+                r: parts.reduce((s, p) => s + p.r * p.count, 0) / total,
+                g: parts.reduce((s, p) => s + p.g * p.count, 0) / total,
+                b: parts.reduce((s, p) => s + p.b * p.count, 0) / total,
+              })
+              lastPushWall = now
+            }
+            skin = f?.skinRatio ?? 0
+            for (const buf of [buffers.forehead, buffers.all]) {
+              while (buf.length > 0 && buf[0].t < t - BUFFER_MS) buf.shift()
+            }
           }
-          skin = f?.skinRatio ?? 0
+          sendMeFrame(now, t)
+          drawOverlay()
           frameWalls.push(now)
-          for (const buf of [buffers.forehead, buffers.all]) {
-            while (buf.length > 0 && buf[0].t < t - BUFFER_MS) buf.shift()
-          }
           while (frameWalls.length > 0 && frameWalls[0] < now - 2000) frameWalls.shift()
         }
         video.requestVideoFrameCallback(onFrame)
@@ -282,10 +441,13 @@ export default function RppgLabPage() {
       estimateTimer = setInterval(() => {
         const nowWall = performance.now()
         const fresh = nowWall - lastPushWall < STALE_MS
+        const meFresh = nowWall - meLastPushWall < STALE_MS
         while (frameWalls.length > 0 && frameWalls[0] < nowWall - 2000) frameWalls.shift()
         const next: Live = {
           forehead: fresh ? estimateHeartRate(windowed(buffers.forehead)) : null,
           all: fresh ? estimateHeartRate(windowed(buffers.all)) : null,
+          me: meFresh ? heartRateFromBvp(meBuffer) : null,
+          meLatency: meLatencies.length ? meLatencies.reduce((s, v) => s + v, 0) / meLatencies.length : 0,
           fps: frameWalls.length / 2,
           skin,
           face,
@@ -307,10 +469,12 @@ export default function RppgLabPage() {
       stream?.getTracks().forEach((t) => t.stop())
       video.srcObject = null
       overlay.getContext('2d')?.clearRect(0, 0, overlay.width, overlay.height)
+      worker?.terminate()
       liveRef.current = EMPTY_LIVE
       setLive(EMPTY_LIVE)
+      setMeStatus('loading')
     }
-  }, [running])
+  }, [running, meEnabled])
 
   // 이벤트 timeStamp는 performance.now()와 같은 기준 시각
   const handleCondition = (c: Condition, at: number) => {
@@ -331,6 +495,7 @@ export default function RppgLabPage() {
         watch: v,
         forehead: l.forehead,
         all: l.all,
+        me: l.me,
         fps: l.fps,
       },
     ])
@@ -348,6 +513,12 @@ export default function RppgLabPage() {
 
   const summary = summarizePairs(rows, gateDb)
   const elapsed = conditionStart > 0 ? Math.max(0, Math.floor((clock - conditionStart) / 1000)) : 0
+  const meStatusLabel: Record<MeStatus, string> = {
+    loading: '로딩 중',
+    ready: `추론 ${fmt(live.meLatency)}ms`,
+    error: '오류',
+  }
+  const meStatusText = running && meEnabled ? meStatusLabel[meStatus] : '꺼짐'
 
   return (
     <main className="min-h-screen px-6 py-8">
@@ -356,7 +527,7 @@ export default function RppgLabPage() {
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-400">spike · 검증 후 폐기</p>
           <h1 className="text-2xl font-bold text-ink-900">rPPG 실험실</h1>
           <p className="mt-1 text-sm text-ink-500">
-            워치는 운동 모드로 켜고, 옆 사람이 15초마다 워치 BPM을 입력하세요. 조건별로 2분씩.
+            워치(또는 휴대폰 손가락 심박 앱)를 기준으로, 옆 사람이 15초마다 BPM을 입력하세요. 조건별로 2분씩.
           </p>
         </header>
 
@@ -366,6 +537,9 @@ export default function RppgLabPage() {
           <video ref={videoRef} muted playsInline className="h-full w-full -scale-x-100 object-cover" />
           <canvas ref={overlayRef} className="pointer-events-none absolute inset-0 h-full w-full -scale-x-100 object-cover" />
         </div>
+        <p className="-mt-3 text-xs text-ink-400">
+          초록·노랑 사각형 = POS 이마·볼 영역 / 회색 점선 = ME-rPPG 얼굴 박스
+        </p>
 
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -390,17 +564,27 @@ export default function RppgLabPage() {
               <option value={200}>200ms</option>
             </select>
           </label>
+          <label className="flex items-center gap-2 text-sm text-ink-600">
+            <input type="checkbox" checked={meEnabled} onChange={(e) => setMeEnabled(e.target.checked)} />
+            ME-rPPG 같이 돌리기
+          </label>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="이마 BPM" value={fmt(live.forehead?.bpm, 0)} sub={`SNR ${fmt(live.forehead?.snrDb)} dB`} />
-          <Stat label="이마+볼 BPM" value={fmt(live.all?.bpm, 0)} sub={`SNR ${fmt(live.all?.snrDb)} dB`} />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Stat label="POS 이마" value={fmt(live.forehead?.bpm, 0)} sub={`SNR ${fmt(live.forehead?.snrDb)} dB`} />
+          <Stat label="POS 이마+볼" value={fmt(live.all?.bpm, 0)} sub={`SNR ${fmt(live.all?.snrDb)} dB`} />
+          <Stat
+            label="ME-rPPG"
+            value={fmt(live.me?.bpm, 0)}
+            sub={`SNR ${fmt(live.me?.snrDb)} dB · ${meStatusText}`}
+          />
           <Stat label="처리 fps" value={fmt(live.fps, 0)} sub="목표 ≈ 30" />
           <Stat
             label="얼굴 / 이마 피부"
             value={live.face ? '감지' : '없음'}
             sub={`피부 비율 ${Math.round(live.skin * 100)}%`}
           />
+          <Stat label="BPM 단위" value="분당" sub="10초 창 · 1초마다 갱신" />
         </div>
 
         <div className="space-y-3 rounded-xl border border-ink-200 p-4">
@@ -427,7 +611,7 @@ export default function RppgLabPage() {
               inputMode="numeric"
               value={watchInput}
               onChange={(e) => setWatchInput(e.target.value)}
-              placeholder="워치 BPM 입력 후 Enter"
+              placeholder="기준 BPM 입력 후 Enter"
               className="flex-1 rounded-lg border border-ink-300 px-3 py-2 text-sm"
             />
             <button type="submit" className="rounded-lg bg-risk-good px-4 py-2 text-sm font-semibold text-white">
@@ -438,7 +622,7 @@ export default function RppgLabPage() {
 
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-lg font-bold text-ink-900">조건별 오차 (워치 기준)</h2>
+            <h2 className="text-lg font-bold text-ink-900">조건별 오차 (기준 기기 대비)</h2>
             <label className="ml-auto flex items-center gap-2 text-sm text-ink-600">
               품질 게이트 SNR ≥
               <input
@@ -455,7 +639,7 @@ export default function RppgLabPage() {
             <thead>
               <tr className="border-b border-ink-200 text-left text-ink-500">
                 <th className="py-2">조건</th>
-                <th>ROI</th>
+                <th>추정기</th>
                 <th>n</th>
                 <th>평균오차</th>
                 <th>게이트 통과율</th>
@@ -465,12 +649,12 @@ export default function RppgLabPage() {
             </thead>
             <tbody>
               {CONDITIONS.flatMap((c) =>
-                (['forehead', 'all'] as const).map((roi) => {
+                (['forehead', 'all', 'me'] as const).map((roi) => {
                   const s = summary[c.key][roi]
                   return (
                     <tr key={`${c.key}-${roi}`} className="border-b border-ink-100">
                       <td className="py-2">{c.label}</td>
-                      <td>{roi === 'forehead' ? '이마' : '이마+볼'}</td>
+                      <td>{ROI_LABELS[roi]}</td>
                       <td>{s.n}</td>
                       <td>{fmt(s.mae)}</td>
                       <td>{s.n > 0 ? `${Math.round(s.coverage * 100)}%` : '—'}</td>

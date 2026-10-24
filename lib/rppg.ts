@@ -166,6 +166,21 @@ export function estimateHeartRate(samples: RgbSample[], fs: number = DEFAULT_FS)
   return spectralPeak(pos(resampleUniform(samples, fs), fs), fs)
 }
 
+const BVP_WINDOW_MS = 10_000
+
+/** 딥러닝 모델(ME-rPPG 등)이 낸 맥박 파형에서 최근 10초로 심박을 추정한다. */
+export function heartRateFromBvp(points: { t: number; v: number }[], fs: number = DEFAULT_FS): HeartRate | null {
+  if (points.length < 2) return null
+  const from = points[points.length - 1].t - BVP_WINDOW_MS
+  const win = points.filter((p) => p.t >= from)
+  if (win[win.length - 1].t - win[0].t < MIN_SECONDS * 1000) return null
+  const x = resampleUniform(
+    win.map((p) => ({ t: p.t, r: p.v, g: 0, b: 0 })),
+    fs,
+  ).map((c) => c[0])
+  return spectralPeak(x, fs)
+}
+
 /**
  * RGBA 픽셀 중 피부색(YCbCr: Cr 133~173, Cb 77~127 — Chai & Ngan 1999)만 평균낸다.
  * 앞머리·배경이 ROI에 섞여도 맥박 신호가 희석되지 않게 한다.
@@ -229,13 +244,15 @@ export function roiRects(pts: { x: number; y: number }[]): {
 // ── 실험 페이지용: 워치(정답) vs 앱 추정 오차 집계 ───────────────────────
 
 export type Condition = 'quiet' | 'talk' | 'move'
-export type RoiSet = 'forehead' | 'all'
+export type RoiSet = 'forehead' | 'all' | 'me'
 
 export interface PairRow {
   condition: Condition
   watch: number
   forehead: HeartRate | null
   all: HeartRate | null
+  /** ME-rPPG(딥러닝) 추정 — 없으면 미측정 */
+  me?: HeartRate | null
 }
 
 export interface ErrorSummary {
@@ -276,6 +293,9 @@ export function summarizePairs(
   }
   const conds: Condition[] = ['quiet', 'talk', 'move']
   return Object.fromEntries(
-    conds.map((c) => [c, { forehead: summarize(c, 'forehead'), all: summarize(c, 'all') }]),
+    conds.map((c) => [
+      c,
+      { forehead: summarize(c, 'forehead'), all: summarize(c, 'all'), me: summarize(c, 'me') },
+    ]),
   ) as Record<Condition, Record<RoiSet, ErrorSummary>>
 }

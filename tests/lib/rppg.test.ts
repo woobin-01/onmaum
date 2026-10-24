@@ -6,6 +6,7 @@ import {
   meanSkinRgb,
   roiRects,
   summarizePairs,
+  heartRateFromBvp,
   type RgbSample,
 } from '@/lib/rppg'
 
@@ -221,9 +222,43 @@ describe('summarizePairs', () => {
     expect(s.talk.all).toEqual({ n: 1, mae: 10, coverage: 1, gatedMae: 10 })
   })
 
+  it('ME-rPPG 추정값도 같은 방식으로 집계한다', () => {
+    const s = summarizePairs(
+      [{ condition: 'move', watch: 70, forehead: null, all: null, me: { bpm: 73, snrDb: 2 } }],
+      0,
+    )
+    expect(s.move.me).toEqual({ n: 1, mae: 3, coverage: 1, gatedMae: 3 })
+  })
+
   it('게이트를 올리면 통과 구간이 줄어든다', () => {
     const s = summarizePairs([...rows], 3.5)
     expect(s.quiet.forehead).toEqual({ n: 2, mae: 2.5, coverage: 0, gatedMae: null })
     expect(s.quiet.all).toEqual({ n: 2, mae: 2.5, coverage: 0.5, gatedMae: 0 })
+  })
+})
+
+// ── heartRateFromBvp (딥러닝 모델이 낸 맥박 파형 → BPM) ─────────────────────
+describe('heartRateFromBvp', () => {
+  it('타임스탬프가 흔들리는 1.4Hz 파형 → 84 BPM', () => {
+    const rand = mulberry32(11)
+    const pts = Array.from({ length: 300 }, (_, k) => {
+      const t = (k * 1000) / 30 + (rand() * 2 - 1) * 8
+      return { t, v: Math.sin((2 * Math.PI * 1.4 * t) / 1000) }
+    })
+    expect(Math.abs(heartRateFromBvp(pts)!.bpm - 84)).toBeLessThan(1.5)
+  })
+
+  it('최근 10초만 본다 — 앞쪽의 다른 박동수는 무시', () => {
+    const pts = Array.from({ length: 600 }, (_, k) => {
+      const t = (k * 1000) / 30
+      const hz = t < 10000 ? 2.0 : 1.0
+      return { t, v: Math.sin(2 * Math.PI * hz * (t / 1000)) }
+    })
+    expect(Math.abs(heartRateFromBvp(pts)!.bpm - 60)).toBeLessThan(1.5)
+  })
+
+  it('6초 미만이면 null', () => {
+    const pts = Array.from({ length: 150 }, (_, k) => ({ t: (k * 1000) / 30, v: Math.sin(k) }))
+    expect(heartRateFromBvp(pts)).toBeNull()
   })
 })
